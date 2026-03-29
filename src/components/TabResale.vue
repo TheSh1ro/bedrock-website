@@ -21,15 +21,24 @@ function openConfirm(plan: ResalePlan) {
   showConfirmGenerateModal.value = true
 }
 
+function canGeneratePlan(plan: ResalePlan) {
+  return (userStore.profile?.credits || 0) >= plan.price && !userStore.loading.generateKey
+}
+
+function generateFromCard(plan: ResalePlan) {
+  if (!canGeneratePlan(plan)) return
+  openConfirm(plan)
+}
+
 function formatDate(date: string | null) {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('pt-BR')
 }
 
-function keyStatusBadge(key: Key) {
-  if (key.reverted) return 'badge-neutral'
-  if (key.used) return 'badge-warning'
-  return 'badge-success'
+function keyStatusClass(key: Key) {
+  if (key.reverted) return 'key-status key-status-danger'
+  if (key.used) return 'key-status key-status-warning'
+  return 'key-status key-status-success'
 }
 
 function keyStatusLabel(key: Key) {
@@ -90,7 +99,17 @@ async function handleGenerateKey() {
         <!-- Plan selector -->
         <div v-if="userStore.resalePlans.length > 0" style="margin-bottom: var(--space-4)">
           <div class="plan-grid">
-            <div v-for="plan in userStore.resalePlans" :key="plan.duration_days" class="plan-card">
+            <div
+              v-for="plan in userStore.resalePlans"
+              :key="plan.duration_days"
+              class="plan-card purchase-card"
+              :class="{ disabled: !canGeneratePlan(plan) }"
+              role="button"
+              :tabindex="canGeneratePlan(plan) ? 0 : -1"
+              @click="generateFromCard(plan)"
+              @keydown.enter.prevent="generateFromCard(plan)"
+              @keydown.space.prevent="generateFromCard(plan)"
+            >
               <div class="plan-header">
                 <h3 class="plan-name">{{ plan.duration_days }} Dias</h3>
                 <p class="plan-description">{{ plan.title }}</p>
@@ -99,15 +118,9 @@ async function handleGenerateKey() {
                 <span class="plan-price-value">{{ plan.price }}</span>
                 <span class="plan-price-unit">créditos</span>
               </div>
-              <button
-                class="btn btn-primary btn-full"
-                :disabled="
-                  (userStore.profile?.credits || 0) < plan.price || userStore.loading.generateKey
-                "
-                @click="openConfirm(plan)"
-              >
-                Gerar Key
-              </button>
+              <div class="purchase-card-action">
+                {{ canGeneratePlan(plan) ? 'GERAR KEY' : 'INDISPONÍVEL' }}
+              </div>
             </div>
           </div>
         </div>
@@ -185,15 +198,15 @@ async function handleGenerateKey() {
               <div class="resale-hiw-step">
                 <div class="resale-hiw-step-num resale-hiw-step-num--warning">!</div>
                 <div class="resale-hiw-step-body">
-                  <p class="resale-hiw-step-label" style="color: var(--orange)">
+                  <p class="resale-hiw-step-label" style="color: var(--accent-warning)">
                     REEMBOLSO E CANCELAMENTO
                   </p>
                   <p class="resale-hiw-step-text">
-                    Se a key <strong style="color: var(--green)">não foi usada</strong>, você pode
+                    Se a key <strong style="color: var(--accent-success)">não foi usada</strong>, você pode
                     revertê-la a qualquer momento pela tabela abaixo e os créditos serão devolvidos
                     integralmente.
                     <br />
-                    <strong style="color: var(--orange)"
+                    <strong style="color: var(--accent-warning)"
                       >Keys já utilizadas não têm reembolso,</strong
                     >
                     a ativação é irreversível.
@@ -241,7 +254,7 @@ async function handleGenerateKey() {
               <td class="mono text-sm">{{ key.duration_days }}d</td>
               <td class="mono text-sm">{{ formatDate(key.created_at) }}</td>
               <td>
-                <span :class="['badge', keyStatusBadge(key)]">
+                <span :class="keyStatusClass(key)">
                   {{ keyStatusLabel(key) }}
                 </span>
               </td>
@@ -324,7 +337,7 @@ async function handleGenerateKey() {
   >
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title" style="color: var(--green)">✓ Key Gerada</h3>
+        <h3 class="modal-title" style="color: var(--accent-success)">✓ Key Gerada</h3>
       </div>
       <div class="modal-body">
         <p
@@ -340,7 +353,7 @@ async function handleGenerateKey() {
             border-radius: var(--radius-sm);
             padding: var(--space-4) var(--space-5);
             font-size: var(--text-base);
-            color: var(--amber);
+            color: var(--accent-primary);
             word-break: break-all;
             letter-spacing: 0.04em;
           "
@@ -365,7 +378,7 @@ async function handleGenerateKey() {
   <div v-if="showRevertModal" class="modal-overlay" @click.self="showRevertModal = false">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title" style="color: var(--red)">⚠ Reverter Key</h3>
+        <h3 class="modal-title" style="color: var(--accent-danger)">⚠ Reverter Key</h3>
       </div>
       <div class="modal-body">
         <p style="color: var(--text-secondary)">
@@ -373,7 +386,7 @@ async function handleGenerateKey() {
         </p>
         <p
           class="mono"
-          style="color: var(--amber); margin-top: var(--space-3); font-size: var(--text-sm)"
+          style="color: var(--accent-primary); margin-top: var(--space-3); font-size: var(--text-sm)"
         >
           {{ selectedKey?.key }}
         </p>
@@ -430,7 +443,7 @@ async function handleGenerateKey() {
 
 .resale-hiw-chevron {
   font-size: var(--text-base);
-  color: var(--amber);
+  color: var(--accent-primary);
   transition: transform 0.2s ease;
   flex-shrink: 0;
   line-height: 1;
@@ -446,7 +459,7 @@ async function handleGenerateKey() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--amber);
+  color: var(--accent-primary);
   margin-bottom: 0;
 }
 
@@ -473,9 +486,9 @@ async function handleGenerateKey() {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--amber-dim);
-  border: 1px solid var(--wire-gold);
-  color: var(--amber);
+  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 42%, transparent);
+  color: var(--accent-primary);
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -486,9 +499,9 @@ async function handleGenerateKey() {
 }
 
 .resale-hiw-step-num--warning {
-  background: var(--orange-dim);
-  border-color: var(--orange);
-  color: var(--orange);
+  background: color-mix(in srgb, var(--accent-warning) 16%, transparent);
+  border-color: var(--accent-warning);
+  color: var(--accent-warning);
 }
 
 .resale-hiw-step-body {
@@ -522,15 +535,15 @@ async function handleGenerateKey() {
 }
 
 .alert-error-inline {
-  background: var(--red-dim);
-  border-color: var(--red);
-  color: var(--red);
+  background: color-mix(in srgb, var(--accent-danger) 16%, transparent);
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
 }
 
 .alert-warning-inline {
-  background: var(--orange-dim);
-  border-color: var(--orange);
-  color: var(--orange);
+  background: color-mix(in srgb, var(--accent-warning) 16%, transparent);
+  border-color: var(--accent-warning);
+  color: var(--accent-warning);
 }
 
 /* Confirm row */
@@ -557,7 +570,7 @@ async function handleGenerateKey() {
 .confirm-value {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--amber);
+  color: var(--accent-primary);
 }
 
 /* Modal policy boxes */
@@ -574,15 +587,15 @@ async function handleGenerateKey() {
 }
 
 .modal-policy-ok {
-  background: var(--green-dim);
-  border: 1px solid var(--green-dim);
-  color: var(--green-light);
+  background: color-mix(in srgb, var(--accent-success) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-success) 34%, transparent);
+  color: #ffffff;
 }
 
 .modal-policy-warn {
-  background: var(--red-dim);
-  border: 1px solid var(--red-dim);
-  color: var(--red);
+  background: color-mix(in srgb, var(--accent-danger) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger) 16%, transparent);
+  color: var(--accent-danger);
 }
 
 .modal-policy-icon {
@@ -590,4 +603,52 @@ async function handleGenerateKey() {
   font-size: var(--text-sm);
   margin-top: 1px;
 }
+
+.key-status {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.key-status-success {
+  color: var(--accent-success);
+}
+
+.key-status-warning {
+  color: var(--accent-warning);
+}
+
+.key-status-danger {
+  color: var(--accent-danger);
+}
+
+.purchase-card {
+  cursor: pointer;
+}
+
+.purchase-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.purchase-card-action {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--wire);
+  padding-top: var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+
+.purchase-card.disabled .purchase-card-action {
+  color: var(--text-muted);
+}
 </style>
+
+
+

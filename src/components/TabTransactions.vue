@@ -109,7 +109,7 @@ function formatDateTime(date: string | null) {
       <div class="tx-legend-item">
         <span
           class="tx-icon tx-icon--credit"
-          style="width: 22px; height: 22px; font-size: var(--text-2xs)"
+          style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↑</span
         >
         <span>Entrada de créditos</span>
@@ -117,7 +117,7 @@ function formatDateTime(date: string | null) {
       <div class="tx-legend-item">
         <span
           class="tx-icon tx-icon--debit"
-          style="width: 22px; height: 22px; font-size: var(--text-2xs)"
+          style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↓</span
         >
         <span>Saída de créditos</span>
@@ -140,15 +140,15 @@ function formatDateTime(date: string | null) {
 }
 
 .tx-icon--credit {
-  background: var(--green-dim);
-  border: 1px solid var(--green-dim);
-  color: var(--green-light);
+  background: color-mix(in srgb, var(--accent-success-action) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-success-action) 40%, transparent);
+  color: var(--accent-success-action);
 }
 
 .tx-icon--debit {
-  background: var(--red-dim);
-  border: 1px solid var(--red-dim);
-  color: var(--red);
+  background: color-mix(in srgb, var(--accent-danger-action) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger-action) 40%, transparent);
+  color: var(--accent-danger-action);
 }
 
 .tx-label {
@@ -175,10 +175,10 @@ function formatDateTime(date: string | null) {
 }
 
 .tx-amount--credit {
-  color: var(--green-light);
+  color: var(--accent-success-action);
 }
 .tx-amount--debit {
-  color: var(--red);
+  color: var(--accent-danger-action);
 }
 
 .tx-balance {
@@ -190,9 +190,9 @@ function formatDateTime(date: string | null) {
   display: flex;
   gap: var(--space-5);
   padding: var(--space-3) var(--space-4);
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 82%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
 }
 
 .tx-legend-item {

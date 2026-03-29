@@ -21,7 +21,7 @@
           <li>
             <span class="feature-dot"></span>
             Arrastar itens entre coordenadas
-            <code>[x1,y1]</code> → <code>[x2,y2]</code>
+            <code>[x1,y1]</code> - <code>[x2,y2]</code>
           </li>
           <li>
             <span class="feature-dot"></span>
@@ -138,17 +138,16 @@
         <div class="revert-steps">
           <div class="step">
             <div class="step-number">1</div>
-            <div class="step-content">
-              Abra o aplicativo conversor de youtube para MP3
-              <strong>Executar</strong>.
-            </div>
+            <div class="step-content">Abra o aplicativo conversor de youtube para MP3</div>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
-              Cole o link abaixo na barra de URL e pressione <kbd>Buscar</kbd>:
+              Cole o link abaixo na barra de URL e pressione <kbd>Buscar</kbd>
               <div class="command-box">
-                <code class="command-text" style="color: var(--amber-light)"
+                <code
+                  class="command-text"
+                  style="color: color-mix(in srgb, var(--accent-primary) 80%, white)"
                   >https://www.youtube.com/watch?v=Aq5WXmQQooo</code
                 >
                 <button
@@ -190,11 +189,11 @@ const tutorialSections = [
     intro: 'Define as regiões da tela que o aplicativo utiliza para operar.',
     items: [
       {
-        label: 'Combinar item → DEFINIR',
-        desc: 'Clique e selecione a coordenada exata onde o item deve ser arrastado para combinar (ex.: pedra de amolar).',
+        label: 'Combinar item - DEFINIR',
+        desc: 'Clique e selecione a coordenada exata onde o item deve ser arrastado para combinar (a pedra de amolar será arrastada do inventário até essa posição da sua tela para consertar o item na mão).',
       },
       {
-        label: 'Inventário → DEFINIR',
+        label: 'Inventário - DEFINIR',
         desc: 'Clique e desenhe a área do inventário onde as pedras de amolar ficam localizadas na tela.',
       },
       {
@@ -210,19 +209,19 @@ const tutorialSections = [
     intro: 'Configura as posições de origem e destino para mover itens automaticamente.',
     items: [
       {
-        label: 'Posição 1 → DEFINIR',
+        label: 'Posição 1 - DEFINIR',
         desc: 'Define a coordenada de origem do drag (ponto de onde o item será pego).',
       },
       {
-        label: 'Posição 1 → atalho',
+        label: 'Posição 1 - atalho',
         desc: 'Associa uma tecla de atalho para ativar rapidamente esta posição.',
       },
       {
-        label: 'Posição 2 → DEFINIR',
+        label: 'Posição 2 - DEFINIR',
         desc: 'Define a coordenada de destino do drag (ponto onde o item será solto).',
       },
       {
-        label: 'Posição 2 → atalho',
+        label: 'Posição 2 - atalho',
         desc: 'Associa uma tecla de atalho para ativar rapidamente esta posição.',
       },
       {
@@ -242,19 +241,19 @@ const tutorialSections = [
         desc: 'Controla a sensibilidade do reconhecimento (0.0 a 1.0). Valores mais altos exigem correspondência mais precisa com o template.',
       },
       {
-        label: 'Amolador horizontal → VER',
+        label: 'Amolador horizontal - VER',
         desc: 'Abre uma prévia da imagem de referência atual para o amolador na posição horizontal.',
       },
       {
-        label: 'Amolador horizontal → DEFINIR',
+        label: 'Amolador horizontal - DEFINIR',
         desc: 'Permite capturar uma nova imagem de referência para o amolador horizontal.',
       },
       {
-        label: 'Amolador vertical → VER',
+        label: 'Amolador vertical - VER',
         desc: 'Abre uma prévia da imagem de referência atual para o amolador na posição vertical.',
       },
       {
-        label: 'Amolador vertical → DEFINIR',
+        label: 'Amolador vertical - DEFINIR',
         desc: 'Permite capturar uma nova imagem de referência para o amolador vertical.',
       },
       {
@@ -303,7 +302,7 @@ const tutorialSections = [
         desc: 'Remove a sessão local e reinicia o aplicativo. Use para trocar de conta.',
       },
       {
-        label: 'Modo disfarce → ATIVAR',
+        label: 'Modo disfarce - ATIVAR',
         desc: 'Transforma o aplicativo em um conversor de youtube para mp3. Atenção: será necessário seguir as instruções abaixo para reverter.',
       },
     ],
@@ -354,7 +353,7 @@ onMounted(() => {
 <style scoped>
 /* ─── Info card ─────────────────────────────────────────────────────────── */
 .card--highlight {
-  border: 1px solid var(--amber);
+  border: 1px solid var(--accent-primary);
 }
 
 .card-text {
@@ -382,7 +381,7 @@ onMounted(() => {
 .feature-dot {
   width: 6px;
   height: 6px;
-  background: var(--amber);
+  background: var(--accent-primary);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -461,7 +460,7 @@ onMounted(() => {
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--amber);
+  background: var(--accent-primary);
   border: none;
   cursor: pointer;
   text-align: left;
@@ -500,7 +499,7 @@ onMounted(() => {
 } */
 
 .accordion-chevron {
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   color: var(--text-muted);
   transition: transform 0.2s ease;
   flex-shrink: 0;
@@ -508,7 +507,7 @@ onMounted(() => {
 
 .accordion-item--open .accordion-chevron {
   transform: rotate(90deg);
-  color: var(--amber);
+  color: var(--accent-primary);
 }
 
 .accordion-body {
@@ -586,7 +585,7 @@ onMounted(() => {
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--amber);
+  color: var(--accent-primary);
 }
 
 .tutorial-item-desc {
@@ -615,7 +614,7 @@ onMounted(() => {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  background: var(--amber-light);
+  background: color-mix(in srgb, var(--accent-primary) 80%, white);
   color: var(--text-on-accent);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -681,7 +680,7 @@ kbd {
 }
 
 .btn-copy.copied {
-  color: var(--green-light);
-  border-color: var(--green-light);
+  color: #ffffff;
+  border-color: #ffffff;
 }
 </style>

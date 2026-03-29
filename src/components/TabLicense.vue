@@ -25,6 +25,15 @@ function confirmBuy(plan: Plan) {
   showBuyModal.value = true
 }
 
+function canBuyPlan(plan: Plan) {
+  return (userStore.profile?.credits || 0) >= plan.price && userStore.loading.buyDays !== plan.days
+}
+
+function buyFromCard(plan: Plan) {
+  if (!canBuyPlan(plan)) return
+  confirmBuy(plan)
+}
+
 async function handleBuy() {
   if (!selectedPlan.value) return
   const result = await userStore.buyDays(selectedPlan.value.days)
@@ -84,7 +93,16 @@ async function handleBuy() {
             v-for="plan in userStore.licensePlans"
             :key="plan.days"
             class="plan-card"
-            :class="{ featured: plan.days === 30 }"
+            :class="{
+              featured: plan.days === 30,
+              'purchase-card': true,
+              disabled: !canBuyPlan(plan),
+            }"
+            role="button"
+            :tabindex="canBuyPlan(plan) ? 0 : -1"
+            @click="buyFromCard(plan)"
+            @keydown.enter.prevent="buyFromCard(plan)"
+            @keydown.space.prevent="buyFromCard(plan)"
           >
             <div class="plan-header">
               <h3 class="plan-name">{{ plan.days }} Dias</h3>
@@ -94,17 +112,10 @@ async function handleBuy() {
               <span class="plan-price-value">{{ plan.price }}</span>
               <span class="plan-price-unit">créditos</span>
             </div>
-            <button
-              class="btn btn-primary btn-full"
-              :disabled="
-                (userStore.profile?.credits || 0) < plan.price ||
-                userStore.loading.buyDays === plan.days
-              "
-              @click="confirmBuy(plan)"
-            >
-              <span class="spinner" v-if="userStore.loading.buyDays === plan.days" />
-              <span v-else>COMPRAR</span>
-            </button>
+            <div class="purchase-card-action">
+              <span v-if="userStore.loading.buyDays === plan.days" class="spinner" />
+              <span v-else>{{ canBuyPlan(plan) ? 'COMPRAR' : 'SALDO INSUFICIENTE' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -151,14 +162,14 @@ async function handleBuy() {
 
 .license-status-block {
   padding: var(--space-5);
-  background: var(--bg-void);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 82%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
 }
 
 .lsb-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -179,10 +190,10 @@ async function handleBuy() {
 }
 
 .text-red {
-  color: var(--red);
+  color: var(--accent-danger);
 }
 .text-green {
-  color: var(--green);
+  color: var(--accent-success);
 }
 
 .confirm-row {
@@ -191,9 +202,9 @@ async function handleBuy() {
   justify-content: space-between;
   margin-top: var(--space-5);
   padding: var(--space-4) var(--space-5);
-  background: var(--bg-void);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 82%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
 }
 
 .confirm-label {
@@ -208,6 +219,31 @@ async function handleBuy() {
 .confirm-value {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--amber);
+  color: var(--accent-primary);
+}
+
+.purchase-card {
+  cursor: pointer;
+}
+
+.purchase-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.purchase-card-action {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--wire);
+  padding-top: var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+
+.purchase-card.disabled .purchase-card-action {
+  color: var(--text-muted);
 }
 </style>

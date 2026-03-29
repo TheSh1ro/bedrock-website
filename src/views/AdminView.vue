@@ -225,6 +225,13 @@ async function confirmLogout() {
 }
 
 function expandUser(user: User) {
+  const isSameUserOpen = adminStore.showUserPanel && adminStore.selectedUser?.id === user.id
+
+  if (isSameUserOpen) {
+    adminStore.closeUserPanel()
+    return
+  }
+
   adminStore.selectUser(user)
 }
 
@@ -272,10 +279,7 @@ function daysLeft(iso: string | null) {
       </div>
 
       <div class="admin-login-card">
-        <div class="terminal-header">
-          <span class="terminal-dots"><span></span><span></span><span></span></span>
-          <span class="terminal-title">AUTENTICAÇÃO ADMINISTRATIVA</span>
-        </div>
+        <div class="admin-login-card-head">Autenticação Administrativa</div>
 
         <div
           v-if="adminStore.error"
@@ -341,11 +345,15 @@ function daysLeft(iso: string | null) {
         </div>
         <div class="stat-card success">
           <div class="stat-label">Licenças Ativas</div>
-          <div class="stat-value" style="color: var(--green)">{{ adminStore.stats.active }}</div>
+          <div class="stat-value" style="color: var(--accent-success)">
+            {{ adminStore.stats.active }}
+          </div>
         </div>
         <div class="stat-card warning">
           <div class="stat-label">Expirados</div>
-          <div class="stat-value" style="color: var(--orange)">{{ adminStore.stats.expired }}</div>
+          <div class="stat-value" style="color: var(--accent-warning)">
+            {{ adminStore.stats.expired }}
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Desativados</div>
@@ -396,9 +404,9 @@ function daysLeft(iso: string | null) {
             <tbody>
               <tr v-for="plan in adminStore.resalePlans" :key="plan.duration_days">
                 <td class="mono" style="font-weight: 600">{{ plan.duration_days }} dias</td>
-                <td class="mono" style="color: var(--amber)">{{ plan.price }}</td>
+                <td class="mono" style="color: var(--accent-primary)">{{ plan.price }}</td>
                 <td>
-                  <span :class="['badge', plan.is_active ? 'badge-success' : 'badge-neutral']">
+                  <span :class="['badge', plan.is_active ? 'badge-success' : 'badge-danger']">
                     {{ plan.is_active ? 'Ativo' : 'Desativado' }}
                   </span>
                 </td>
@@ -453,7 +461,7 @@ function daysLeft(iso: string | null) {
             <tbody>
               <tr v-for="plan in adminStore.licensePlans" :key="plan.duration_days">
                 <td class="mono" style="font-weight: 600">{{ plan.duration_days }} dias</td>
-                <td class="mono" style="color: var(--amber)">{{ plan.price }}</td>
+                <td class="mono" style="color: var(--accent-primary)">{{ plan.price }}</td>
                 <td>
                   <button class="btn btn-ghost btn-sm" @click="openLicensePlanModal(plan)">
                     Editar
@@ -511,16 +519,13 @@ function daysLeft(iso: string | null) {
             </thead>
             <tbody>
               <tr v-if="adminStore.filteredUsers.length === 0">
-                <td colspan="7" class="empty-state" style="padding: 3rem">
+                <td colspan="8" class="empty-state" style="padding: 3rem">
                   Nenhum operador encontrado.
                 </td>
               </tr>
 
               <template v-for="user in adminStore.filteredUsers" :key="user.id">
-                <tr
-                  class="user-row"
-                  @click="adminStore.selectedUser ? adminStore.closeUserPanel() : expandUser(user)"
-                >
+                <tr class="user-row" @click="expandUser(user)">
                   <td>
                     <span class="mono" style="font-weight: 600; color: var(--text-primary)">
                       {{ user.username }}
@@ -528,7 +533,7 @@ function daysLeft(iso: string | null) {
                   </td>
                   <td style="color: var(--text-muted)">{{ user.email || '—' }}</td>
                   <td>
-                    <span v-if="!user.is_active" class="badge badge-neutral">Inativo</span>
+                    <span v-if="!user.is_active" class="badge badge-danger">Inativo</span>
                     <span v-else-if="adminStore.isLicenseActive(user)" class="badge badge-success"
                       >Ativo</span
                     >
@@ -540,7 +545,7 @@ function daysLeft(iso: string | null) {
                   <td class="mono" style="font-size: var(--text-xs)">
                     {{ daysLeft(user.software_access_until) }}
                   </td>
-                  <td class="mono" style="font-size: var(--text-sm); color: var(--amber)">
+                  <td class="mono" style="font-size: var(--text-sm); color: var(--accent-primary)">
                     {{ user.credits }}
                   </td>
                   <td class="mono" style="font-size: var(--text-xs)">
@@ -570,19 +575,18 @@ function daysLeft(iso: string | null) {
 
                 <!-- Expanded user detail -->
                 <tr v-if="adminStore.selectedUser?.id === user.id && adminStore.showUserPanel">
-                  <td colspan="7" class="user-details">
+                  <td colspan="8" class="user-details">
                     <div class="user-details-content">
                       <div
                         class="flex items-center justify-between"
                         style="margin-bottom: var(--space-4)"
                       >
                         <div class="user-detail-header">
-                          <span class="mono" style="color: var(--amber)">{{ user.username }}</span>
+                          <span class="mono" style="color: var(--accent-primary)">{{
+                            user.username
+                          }}</span>
                           <span class="detail-sub">— HISTÓRICO DE KEYS</span>
                         </div>
-                        <button class="btn btn-ghost btn-sm" @click="adminStore.closeUserPanel">
-                          Fechar ✕
-                        </button>
                       </div>
 
                       <div
@@ -613,7 +617,10 @@ function daysLeft(iso: string | null) {
                         </thead>
                         <tbody>
                           <tr v-for="key in adminStore.selectedUserKeys" :key="key.id">
-                            <td class="mono" style="font-size: var(--text-xs); color: var(--amber)">
+                            <td
+                              class="mono"
+                              style="font-size: var(--text-xs); color: var(--accent-primary)"
+                            >
                               {{ key.key }}
                             </td>
                             <td class="mono" style="font-size: var(--text-xs)">
@@ -623,7 +630,7 @@ function daysLeft(iso: string | null) {
                               {{ formatDate(key.created_at) }}
                             </td>
                             <td>
-                              <span v-if="key.reverted" class="badge badge-neutral">Revertida</span>
+                              <span v-if="key.reverted" class="badge badge-danger">Revertida</span>
                               <span v-else-if="key.used" class="badge badge-warning">Usada</span>
                               <span v-else class="badge badge-success">Disponível</span>
                             </td>
@@ -721,7 +728,9 @@ function daysLeft(iso: string | null) {
         </div>
         <div class="modal-body space-y-4">
           <div class="credits-user-row">
-            <span class="mono" style="color: var(--amber)">{{ creditsForm.username }}</span>
+            <span class="mono" style="color: var(--accent-primary)">{{
+              creditsForm.username
+            }}</span>
             <span class="cred-current-badge">
               <span class="ccb-label">SALDO</span>
               <span class="ccb-value">{{ creditsForm.current }}</span>
@@ -785,7 +794,7 @@ function daysLeft(iso: string | null) {
         <div class="modal-body space-y-4">
           <div
             class="edit-user-tag mono"
-            style="color: var(--amber); margin-bottom: var(--space-2)"
+            style="color: var(--accent-primary); margin-bottom: var(--space-2)"
           >
             {{ editForm.username }}
           </div>
@@ -837,12 +846,12 @@ function daysLeft(iso: string | null) {
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title" style="color: var(--red)">⚠ Desativar Operador</h3>
+          <h3 class="modal-title" style="color: var(--accent-danger)">⚠ Desativar Operador</h3>
         </div>
         <div class="modal-body">
           <p style="color: var(--text-secondary)">
             Tem certeza que deseja desativar
-            <strong class="mono" style="color: var(--red)">{{
+            <strong class="mono" style="color: var(--accent-danger)">{{
               adminStore.selectedUser?.username
             }}</strong
             >?
@@ -867,7 +876,7 @@ function daysLeft(iso: string | null) {
         <div class="modal-body">
           <p style="color: var(--text-secondary)">
             Desconectar
-            <strong class="mono" style="color: var(--amber)">{{
+            <strong class="mono" style="color: var(--accent-primary)">{{
               adminStore.selectedUser?.username
             }}</strong
             >?
@@ -902,11 +911,40 @@ function daysLeft(iso: string | null) {
 .admin-login-page,
 .loading-page,
 .admin-dashboard-page {
-  background-color: var(--text-on-accent);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background: transparent;
   min-height: 100vh;
+  position: relative;
+}
+
+.admin-login-page::before,
+.admin-login-page::after,
+.admin-dashboard-page::before,
+.admin-dashboard-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.admin-login-page::before,
+.admin-dashboard-page::before {
+  background:
+    radial-gradient(
+      56rem circle at 10% 14%,
+      color-mix(in srgb, var(--accent-secondary) 19%, transparent),
+      transparent 56%
+    ),
+    radial-gradient(
+      52rem circle at 88% 9%,
+      color-mix(in srgb, var(--accent-primary) 16%, transparent),
+      transparent 60%
+    );
+}
+
+.admin-login-page::after,
+.admin-dashboard-page::after {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05), transparent 40%);
 }
 
 .admin-login-page {
@@ -933,8 +971,8 @@ function daysLeft(iso: string | null) {
 .admin-logo {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--amber), var(--green));
-  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -955,7 +993,7 @@ function daysLeft(iso: string | null) {
 
 .admin-brand-sub {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -963,11 +1001,21 @@ function daysLeft(iso: string | null) {
 }
 
 .admin-login-card {
-  background: var(--bg-void);
-  border: 1px solid var(--wire-active);
-  border-top: 2px solid var(--amber);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg), var(--amber-glow);
+  background: color-mix(in srgb, var(--surface-glass-strong) 92%, #141414);
+  border: 1px solid color-mix(in srgb, var(--accent-secondary) 30%, var(--border-glass));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-login-card-head {
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(175, 202, 255, 0.18);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface-glass) 74%, #141414);
 }
 
 .admin-login-form {
@@ -975,47 +1023,6 @@ function daysLeft(iso: string | null) {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-}
-
-/* Terminal header decoration */
-.terminal-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 0.55rem 1rem;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--wire);
-}
-
-.terminal-dots {
-  display: flex;
-  gap: 5px;
-}
-
-.terminal-dots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--wire-active);
-}
-
-.terminal-dots span:first-child {
-  background: var(--red);
-}
-.terminal-dots span:nth-child(2) {
-  background: var(--orange);
-}
-.terminal-dots span:last-child {
-  background: var(--green);
-}
-
-.terminal-title {
-  font-family: var(--font-ui);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
 }
 
 /* ── Stats Grid ── */
@@ -1038,9 +1045,9 @@ function daysLeft(iso: string | null) {
 }
 
 .stat-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass-strong) 92%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
@@ -1056,19 +1063,19 @@ function daysLeft(iso: string | null) {
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--wire-active);
+  background: rgba(175, 202, 255, 0.34);
 }
 
 .stat-card.success::before {
-  background: var(--green);
+  background: var(--accent-success);
 }
 .stat-card.warning::before {
-  background: var(--orange);
+  background: var(--accent-warning);
 }
 
 .stat-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -1091,7 +1098,7 @@ function daysLeft(iso: string | null) {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--text-on-accent);
-  background: var(--amber);
+  background: var(--accent-primary);
   padding: 0.15rem 0.5rem;
   border-radius: 1px;
 }
@@ -1128,7 +1135,7 @@ function daysLeft(iso: string | null) {
 
 .detail-sub {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1149,25 +1156,25 @@ function daysLeft(iso: string | null) {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  background: var(--amber-dim);
-  border: 1px solid var(--amber-dim);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 32%, transparent);
+  border-radius: 999px;
   padding: var(--space-1) var(--space-3);
 }
 
 .ccb-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--amber);
+  color: var(--accent-primary);
 }
 
 .ccb-value {
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--amber);
+  color: var(--accent-primary);
 }
 
 /* Operation toggle */
@@ -1200,8 +1207,8 @@ function daysLeft(iso: string | null) {
 }
 
 .op-option.active {
-  background: var(--amber-dim);
-  color: var(--amber);
+  background: color-mix(in srgb, var(--accent-secondary) 16%, transparent);
+  color: var(--text-primary);
 }
 
 /* Edit user tag */

@@ -1,6 +1,6 @@
 <!-- UserView.vue -->
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
   PanelLeft,
   RefreshCw,
@@ -9,11 +9,14 @@ import {
   Download,
   Users,
   ShieldCheck,
+  Shield,
 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const toastStore = useToastStore()
@@ -21,7 +24,37 @@ const toastStore = useToastStore()
 // ── Online users counter (fake / demo) ──
 const TOTAL_REGISTERED = 11
 const onlineCount = ref(0)
+const profileMenuOpen = ref(false)
+const profileImageError = ref(false)
+const profileMenuRef = ref<HTMLElement | null>(null)
 let onlineInterval: ReturnType<typeof setInterval> | null = null
+
+const profileAvatarUrl = computed(() => {
+  const seed = encodeURIComponent(userStore.profile?.username || 'soldier')
+  return `https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${seed}&backgroundType=solid&backgroundColor=1a1a1a`
+})
+
+function toggleProfileMenu() {
+  profileMenuOpen.value = !profileMenuOpen.value
+}
+
+function goAdmin() {
+  profileMenuOpen.value = false
+  router.push({ name: 'admin' })
+}
+
+function logoutFromMenu() {
+  profileMenuOpen.value = false
+  authStore.logout()
+}
+
+function handleGlobalPointerDown(event: Event) {
+  const target = event.target as Node | null
+  if (!profileMenuRef.value || !target) return
+  if (!profileMenuRef.value.contains(target)) {
+    profileMenuOpen.value = false
+  }
+}
 
 function seededValue(seed: number, min: number, max: number): number {
   const h = ((seed * 2654435761) >>> 0) ^ (seed >>> 16)
@@ -38,6 +71,7 @@ function refreshOnline() {
 }
 
 onMounted(async () => {
+  document.addEventListener('pointerdown', handleGlobalPointerDown)
   refreshOnline()
   onlineInterval = setInterval(refreshOnline, 30_000)
   await Promise.all([
@@ -48,6 +82,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('pointerdown', handleGlobalPointerDown)
   if (onlineInterval) clearInterval(onlineInterval)
 })
 
@@ -68,16 +103,13 @@ function formatDate(date: string | null) {
         <nav class="header-nav">
           <div class="header-pill">
             <span class="pill-label">Créditos</span>
-            <span class="pill-value" style="color: var(--amber)">{{
+            <span class="pill-value" style="color: var(--accent-primary)">{{
               userStore.profile.credits
             }}</span>
           </div>
           <div class="header-pill">
             <span class="pill-label">Licença</span>
-            <span
-              class="pill-value"
-              :style="{ color: userStore.isExpired ? 'var(--red)' : 'var(--green)' }"
-            >
+            <span class="pill-value" style="color: var(--accent-primary)">
               {{ userStore.isExpired ? 'EXPIRADA' : `${userStore.daysLeft}d` }}
             </span>
           </div>
@@ -85,7 +117,39 @@ function formatDate(date: string | null) {
             <span class="pill-label">Soldado</span>
             <span class="pill-value mono">{{ userStore.profile.username }}</span>
           </div>
-          <button class="btn btn-ghost" @click="authStore.logout">Sair</button>
+          <div class="profile-menu" ref="profileMenuRef">
+            <button
+              class="profile-trigger"
+              type="button"
+              @click="toggleProfileMenu"
+              aria-label="Abrir menu do perfil"
+            >
+              <img
+                v-if="!profileImageError"
+                class="profile-avatar"
+                :src="profileAvatarUrl"
+                alt="Avatar do perfil"
+                @error="profileImageError = true"
+              />
+              <span v-else class="profile-avatar-fallback">
+                <Shield :size="14" />
+              </span>
+            </button>
+
+            <div v-if="profileMenuOpen" class="profile-dropdown">
+              <button
+                v-if="authStore.isAdmin"
+                class="profile-action"
+                type="button"
+                @click="goAdmin"
+              >
+                Admin
+              </button>
+              <button class="profile-action danger" type="button" @click="logoutFromMenu">
+                Desconectar
+              </button>
+            </div>
+          </div>
         </nav>
       </div>
     </header>
@@ -99,14 +163,14 @@ function formatDate(date: string | null) {
         <div class="stat-strip-divider"></div>
         <div class="stat-strip-item">
           <span class="stat-strip-label">Disponíveis</span>
-          <span class="stat-strip-value" style="color: var(--green)">{{
+          <span class="stat-strip-value" style="color: var(--accent-success)">{{
             userStore.keyStats.available
           }}</span>
         </div>
         <div class="stat-strip-divider"></div>
         <div class="stat-strip-item">
           <span class="stat-strip-label">Usadas</span>
-          <span class="stat-strip-value" style="color: var(--orange)">{{
+          <span class="stat-strip-value" style="color: var(--accent-warning)">{{
             userStore.keyStats.used
           }}</span>
         </div>
@@ -141,7 +205,7 @@ function formatDate(date: string | null) {
               <ArrowLeftRight class="side-nav-icon" />Transações
             </RouterLink>
             <RouterLink
-              v-if="!userStore.isExpired || userStore.profile.credits"
+              v-if="!userStore.isExpired"
               class="side-nav-item"
               :to="{ name: 'download' }"
               active-class="active"
@@ -154,7 +218,9 @@ function formatDate(date: string | null) {
             <div class="slc-label"><ShieldCheck class="slc-icon" />LICENÇA</div>
             <div
               class="slc-value"
-              :style="{ color: userStore.isExpired ? 'var(--red)' : 'var(--green)' }"
+              :style="{
+                color: userStore.isExpired ? 'var(--accent-danger)' : 'var(--accent-success)',
+              }"
             >
               {{ userStore.isExpired ? 'EXPIRADA' : `${userStore.daysLeft} DIAS` }}
             </div>
@@ -212,19 +278,35 @@ function formatDate(date: string | null) {
 .page-wrapper,
 .loading-page {
   min-height: 100dvh;
-  background-color: var(--text-on-accent);
-  background-image:
-    linear-gradient(to bottom, transparent 55vh, var(--bg-void) calc(55vh + 200px)),
-    url('@/assets/background.png'), url('@/assets/background_repeat.png');
-  background-position:
-    top center,
-    top center,
-    top center;
-  background-repeat: no-repeat, no-repeat, repeat-y;
-  background-size:
-    100% auto,
-    100% auto,
-    100% auto;
+  background: transparent;
+  position: relative;
+}
+
+.page-wrapper::before,
+.page-wrapper::after,
+.loading-page::before,
+.loading-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.page-wrapper::before,
+.loading-page::before {
+  background:
+    linear-gradient(180deg, rgba(12, 12, 12, 0.82), rgba(7, 7, 7, 0.9)),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.035), rgba(244, 218, 45, 0.05) 46%, transparent);
+}
+
+.page-wrapper::after,
+.loading-page::after {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 88%);
 }
 
 .loading-page {
@@ -248,12 +330,13 @@ function formatDate(date: string | null) {
 .stats-strip {
   display: flex;
   align-items: center;
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 84%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-6);
   margin-bottom: var(--space-6);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-strip-item {
@@ -268,7 +351,7 @@ function formatDate(date: string | null) {
 
 .stat-strip-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -330,21 +413,21 @@ function formatDate(date: string | null) {
 }
 
 .side-nav {
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 85%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .side-nav-header {
   padding: var(--space-3) var(--space-4);
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--text-disabled);
-  background: var(--bg-void);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface-glass) 76%, #141414);
   border-bottom: 1px solid var(--wire);
 }
 
@@ -355,7 +438,7 @@ function formatDate(date: string | null) {
   width: 100%;
   padding: var(--space-3) var(--space-4);
   font-family: var(--font-ui);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--text-muted);
@@ -370,12 +453,12 @@ function formatDate(date: string | null) {
 
 .side-nav-item:hover {
   color: var(--text-secondary);
-  background: var(--bg-elevated);
+  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
 }
 .side-nav-item.active {
-  color: var(--amber);
-  border-left-color: var(--amber);
-  background: var(--amber-dim);
+  color: var(--accent-primary);
+  border-left-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
 }
 .side-nav-icon {
   opacity: 0.5;
@@ -410,15 +493,15 @@ function formatDate(date: string | null) {
 }
 
 .side-license-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 86%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
 }
 
 .slc-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -442,9 +525,9 @@ function formatDate(date: string | null) {
 
 /* Online users card */
 .side-online-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-glass) 86%, #171717);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
 }
 
@@ -457,7 +540,7 @@ function formatDate(date: string | null) {
 
 .soc-label {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -474,19 +557,19 @@ function formatDate(date: string | null) {
   background: var(--text-disabled);
 }
 .soc-pulse.live {
-  background: var(--green);
+  background: var(--accent-success);
   animation: pulse-live 2s infinite;
 }
 
 @keyframes pulse-live {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 60%, transparent);
+    opacity: 1;
   }
   70% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 0%, transparent);
+    opacity: 0.55;
   }
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 0%, transparent);
+    opacity: 1;
   }
 }
 
@@ -511,13 +594,92 @@ function formatDate(date: string | null) {
   line-height: 1;
 }
 .soc-metric-value.online {
-  color: var(--green);
+  color: var(--accent-success);
 }
 .soc-metric-value.zero {
   color: var(--text-disabled);
 }
 .soc-metric-value.total {
   color: var(--text-primary);
+}
+
+.profile-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-trigger {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--wire-active);
+  background: color-mix(in srgb, var(--surface-glass) 90%, #181818);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  align-self: center;
+  line-height: 0;
+}
+
+.profile-avatar,
+.profile-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.profile-avatar {
+  display: block;
+  object-fit: cover;
+}
+
+.profile-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 142px;
+  background: color-mix(in srgb, var(--surface-glass-strong) 94%, #161616);
+  border: 1px solid var(--wire-active);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 80;
+}
+
+.profile-action {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  padding: 0.48rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.profile-action:hover {
+  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+  border-color: var(--wire);
+}
+
+.profile-action.danger {
+  color: var(--accent-danger-action);
 }
 
 .soc-divider {

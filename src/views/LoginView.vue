@@ -154,106 +154,126 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
-/* ── Page ── */
 .login-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--text-on-accent);
+  position: relative;
+  isolation: isolate;
   padding: var(--space-8);
+  background:
+    linear-gradient(180deg, rgba(12, 12, 12, 0.82), rgba(7, 7, 7, 0.92)),
+    linear-gradient(130deg, rgba(255, 255, 255, 0.04), rgba(244, 218, 45, 0.05) 46%, transparent);
 }
 
-/* ── Card ── */
+.login-page::before,
+.login-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.login-page::before {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 88%);
+}
+
+.login-page::after {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), transparent 42%);
+}
+
 .login-card {
   width: 100%;
-  max-width: 400px;
-  background: var(--bg-surface);
-  border: 1px solid var(--wire-active);
-  border-radius: var(--radius-md);
+  max-width: 440px;
+  background: var(--surface-glass-strong);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
   padding: var(--space-10) var(--space-8);
   box-shadow: var(--shadow-lg);
 }
 
-/* ── Brand ── */
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
 .brand-logo {
-  height: 36px;
+  height: 40px;
   width: auto;
   display: block;
 }
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: 0.22em;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0.2em;
   color: var(--text-secondary);
   text-transform: uppercase;
 }
 
-/* ── Mode title ── */
 .mode-title {
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: clamp(1.8rem, 2.5vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
   color: var(--text-primary);
   margin-bottom: var(--space-6);
   line-height: 1.1;
 }
 
-/* ── Tabs ── */
 .auth-tabs {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--wire);
+  gap: var(--space-2);
   margin-bottom: var(--space-8);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-glass) 80%, #151515);
+  border: 1px solid var(--wire);
 }
 
 .auth-tab {
   flex: 1;
-  padding: 0.55rem 0;
+  padding: 0.58rem 0.45rem;
   font-family: var(--font-ui);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
   color: var(--text-muted);
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-  text-align: left;
+  transition: all var(--transition-fast);
+  text-align: center;
 }
 
 .auth-tab:hover:not(.active) {
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  border-color: rgba(175, 202, 255, 0.2);
 }
 
 .auth-tab.active {
-  color: var(--amber);
-  border-bottom-color: var(--amber);
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent-secondary) 52%, transparent);
+  background: color-mix(in srgb, var(--accent-secondary) 13%, transparent);
 }
 
-/* ── Form ── */
 .auth-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
 
-/* ── Fields ── */
 .field {
   display: flex;
   flex-direction: column;
@@ -261,29 +281,22 @@ async function handleSubmit() {
 }
 
 .field-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
 .optional-badge {
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0.03em;
   color: var(--text-muted);
   padding: 0.1em 0.45em;
   border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
 }
 
-/* ── Password wrapper ── */
 .input-wrapper {
   position: relative;
 }
@@ -311,29 +324,30 @@ async function handleSubmit() {
   color: var(--text-secondary);
 }
 
-/* ── Submit ── */
 .btn-submit {
   width: 100%;
   margin-top: var(--space-2);
-  padding: 0.8rem 1.5rem;
+  padding: 0.88rem 1.5rem;
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  background: var(--amber);
+  letter-spacing: 0.1em;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-primary) 95%, white),
+    var(--accent-primary)
+  );
   color: var(--text-on-accent);
-  border: none;
-  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 68%, black);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    box-shadow var(--transition-fast);
+  transition: all var(--transition-fast);
+  box-shadow: none;
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: var(--amber-light);
-  box-shadow: var(--amber-glow);
+  filter: brightness(1.06);
 }
 
 .btn-submit:disabled {
@@ -341,18 +355,17 @@ async function handleSubmit() {
   cursor: not-allowed;
 }
 
-/* ── Error ── */
 .alert-error {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--red-dim);
-  border: 1px solid var(--red-dim);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-danger) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger) 34%, transparent);
+  border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--red);
+  color: #d9d9d9;
   line-height: 1.4;
 }
 
@@ -371,7 +384,6 @@ async function handleSubmit() {
   margin-top: 0.05rem;
 }
 
-/* ── Footer ── */
 .auth-footer {
   margin-top: var(--space-6);
   text-align: center;
@@ -381,18 +393,17 @@ async function handleSubmit() {
 }
 
 .auth-footer a {
-  color: var(--amber);
+  color: var(--accent-secondary);
   text-decoration: none;
   font-weight: 600;
   transition: color var(--transition-fast);
 }
 
 .auth-footer a:hover {
-  color: var(--amber-light);
+  color: #f4da2d;
   text-decoration: underline;
 }
 
-/* ── Spinner ── */
 .spinner {
   display: inline-block;
   width: 16px;
@@ -409,10 +420,14 @@ async function handleSubmit() {
   }
 }
 
-/* ── Responsive ── */
 @media (max-width: 480px) {
+  .login-page {
+    padding: var(--space-5);
+  }
+
   .login-card {
     padding: var(--space-8) var(--space-6);
+    border-radius: var(--radius-md);
   }
 }
 </style>
