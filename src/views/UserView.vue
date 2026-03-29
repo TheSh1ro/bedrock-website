@@ -1,6 +1,6 @@
 <!-- UserView.vue -->
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   PanelLeft,
   RefreshCw,
@@ -27,6 +27,7 @@ const onlineCount = ref(0)
 const profileMenuOpen = ref(false)
 const profileImageError = ref(false)
 const profileMenuRef = ref<HTMLElement | null>(null)
+const showExpiredLicenseModal = ref(false)
 let onlineInterval: ReturnType<typeof setInterval> | null = null
 
 const profileAvatarUrl = computed(() => {
@@ -70,16 +71,47 @@ function refreshOnline() {
   onlineCount.value = hour >= 12 && hour < 22 ? seededValue(seed, 1, 4) : 0
 }
 
+function syncExpiredLicenseModal() {
+  if (!userStore.profile) {
+    showExpiredLicenseModal.value = false
+    return
+  }
+  showExpiredLicenseModal.value = userStore.isExpired
+}
+
+function closeExpiredLicenseModal() {
+  showExpiredLicenseModal.value = false
+}
+
+function goToCreditsFromExpiredModal() {
+  closeExpiredLicenseModal()
+  router.push({ name: 'credits' })
+}
+
+function goToLicenseFromExpiredModal() {
+  closeExpiredLicenseModal()
+  router.push({ name: 'license' })
+}
+
 onMounted(async () => {
   document.addEventListener('pointerdown', handleGlobalPointerDown)
   refreshOnline()
   onlineInterval = setInterval(refreshOnline, 30_000)
+  await authStore.loadProfile()
+  syncExpiredLicenseModal()
   await Promise.all([
     userStore.loadKeys(),
     userStore.loadResalePlans(),
     userStore.loadLicensePlans(),
   ])
 })
+
+watch(
+  () => userStore.profile?.software_access_until,
+  () => {
+    syncExpiredLicenseModal()
+  },
+)
 
 onUnmounted(() => {
   document.removeEventListener('pointerdown', handleGlobalPointerDown)
@@ -262,6 +294,33 @@ function formatDate(date: string | null) {
       >
         <span>{{ toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : '◎' }}</span>
         {{ toast.message }}
+      </div>
+    </div>
+
+    <div
+      v-if="showExpiredLicenseModal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="expired-license-title"
+      @click.self="closeExpiredLicenseModal"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="expired-license-title" class="modal-title">Licença expirada</h3>
+        </div>
+        <div class="modal-body">
+          Sua licença está expirada. Para continuar usando todos os recursos, escolha uma opção:
+        </div>
+        <div class="modal-footer expired-license-actions">
+          <button class="btn btn-primary" type="button" @click="goToCreditsFromExpiredModal">
+            Comprar créditos
+          </button>
+          <button class="btn btn-secondary" type="button" @click="goToLicenseFromExpiredModal">
+            Ver minha licença
+          </button>
+          <button class="btn btn-ghost" type="button" @click="closeExpiredLicenseModal">OK</button>
+        </div>
       </div>
     </div>
   </div>
@@ -702,5 +761,9 @@ function formatDate(date: string | null) {
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--text-muted);
+}
+
+.expired-license-actions {
+  flex-wrap: wrap;
 }
 </style>

@@ -7,40 +7,24 @@
         <p class="card-subtitle">Adicione créditos à sua conta via Pix</p>
       </div>
       <div class="card-body">
-        <div class="alert alert-info">
-          <span>◎</span>
-          <div>
-            <p style="font-weight: 700; font-size: var(--text-base); letter-spacing: 0.06em">
-              EM BREVE
-            </p>
-            <p style="font-size: var(--text-sm); margin-top: 2px">
-              A integração com gateway de pagamento está sendo configurada. Entre em contato com o
-              administrador para adicionar créditos manualmente. 1 milhão de rublos = 15 créditos,
-              ou pagamento via PIX.
-            </p>
-          </div>
-        </div>
-
-        <div class="plan-grid" style="margin-top: var(--space-6); opacity: 0.45">
+        <div class="plan-grid">
           <div
-            class="plan-card purchase-card disabled"
+            class="plan-card purchase-card"
             v-for="item in CREDIT_PLANS"
             :key="item.credits"
             role="button"
             tabindex="0"
-            @click="openUnavailableNotice"
-            @keydown.enter.prevent="openUnavailableNotice"
-            @keydown.space.prevent="openUnavailableNotice"
+            @click="openDiscordUser"
+            @keydown.enter.prevent="openDiscordUser"
+            @keydown.space.prevent="openDiscordUser"
           >
             <div class="plan-header">
               <h3 class="plan-name">{{ item.credits }} Créditos</h3>
             </div>
             <div class="plan-price">
-              <span class="plan-price-value" style="color: var(--text-muted)"
-                >R$&thinsp;{{ item.price }}</span
-              >
+              <span class="plan-price-value">R$&thinsp;{{ item.price }}</span>
             </div>
-            <div class="purchase-card-action">INDISPONÍVEL</div>
+            <div class="purchase-card-action">COMPRAR</div>
           </div>
         </div>
       </div>
@@ -49,10 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import { useToastStore } from '@/stores/toast'
-
-const toastStore = useToastStore()
-
 const CREDIT_PLANS = [
   { credits: 10, price: 10 },
   { credits: 20, price: 20 },
@@ -60,18 +40,16 @@ const CREDIT_PLANS = [
   { credits: 100, price: 100 },
 ]
 
-function openUnavailableNotice() {
-  toastStore.info('Compra de créditos estará disponível em breve.')
+const DISCORD_USER_URL = 'discord://-/users/650180750871756826'
+
+function openDiscordUser() {
+  window.location.href = DISCORD_USER_URL
 }
 </script>
 
 <style scoped>
 .purchase-card {
   cursor: pointer;
-}
-
-.purchase-card.disabled {
-  cursor: not-allowed;
 }
 
 .purchase-card-action {
