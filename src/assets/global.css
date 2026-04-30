@@ -4,29 +4,29 @@
   color-scheme: dark;
 
   /* Semantic tokens */
-  --bg-canvas: #060606;
-  --bg-shell: #101010;
-  --surface-glass: rgba(24, 24, 24, 0.78);
-  --surface-glass-strong: rgba(16, 16, 16, 0.92);
-  --text-primary: #ffffff;
-  --text-secondary: #d9d9d9;
-  --text-muted: #b0b0b0;
-  --text-disabled: #797979;
-  --text-on-accent: #05070f;
-  --accent-primary: #f4da2d;
-  --accent-secondary: #f2f2f2;
-  --accent-success: #4ade80;
-  --accent-success-action: #4ade80;
-  --accent-danger: #ff3b4f;
-  --accent-danger-action: #ff3b4f;
-  --accent-warning: #f4da2d;
+  --bg-canvas: #111827;
+  --bg-shell: #1f2937;
+  --surface-glass: rgba(31, 41, 55, 0.78);
+  --surface-glass-strong: rgba(17, 24, 39, 0.92);
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --text-disabled: #6b7280;
+  --text-on-accent: #ffffff;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #38bdf8;
+  --accent-success: #22c55e;
+  --accent-success-action: #22c55e;
+  --accent-danger: #ef4444;
+  --accent-danger-action: #ef4444;
+  --accent-warning: #f59e0b;
   --border-glass: rgba(255, 255, 255, 0.2);
   --shadow-glow: none;
   --blur-md: 16px;
 
   /* Legacy aliases for migration */
   --amber: var(--accent-primary);
-  --amber-light: #f8e86b;
+  --amber-light: #60a5fa;
   --amber-dim: color-mix(in srgb, var(--accent-primary) 16%, transparent);
   --amber-glow: none;
   --green: var(--accent-success);
@@ -39,7 +39,7 @@
   --orange-dim: color-mix(in srgb, var(--accent-warning) 16%, transparent);
 
   /* Compatibility aliases */
-  --accent-primary-hover: #f8e86b;
+  --accent-primary-hover: #60a5fa;
   --accent-primary-subtle: var(--amber-dim);
   --accent-secondary-subtle: color-mix(in srgb, var(--accent-secondary) 20%, transparent);
   --accent-success-subtle: var(--green-dim);
@@ -55,7 +55,7 @@
   --bg-overlay: color-mix(in srgb, var(--bg-shell) 68%, black);
   --wire: rgba(255, 255, 255, 0.14);
   --wire-active: rgba(255, 255, 255, 0.24);
-  --wire-gold: rgba(244, 218, 45, 0.4);
+  --wire-gold: rgba(59, 130, 246, 0.42);
   --border-subtle: var(--wire);
   --border-default: var(--wire-active);
   --border-hover: var(--wire-gold);
@@ -150,10 +150,10 @@ body::before {
     radial-gradient(720px circle at 14% 10%, rgba(255, 255, 255, 0.07), transparent 60%),
     radial-gradient(
       640px circle at 84% 12%,
-      color-mix(in srgb, var(--accent-primary) 18%, transparent),
+      color-mix(in srgb, var(--accent-primary) 14%, transparent),
       transparent 62%
     ),
-    linear-gradient(160deg, #050505 0%, #0c0c0c 52%, #080808 100%);
+    linear-gradient(160deg, #0f172a 0%, #111827 52%, #1f2937 100%);
   opacity: 0.95;
 }
 
@@ -381,7 +381,7 @@ label,
 
 .btn-success {
   background: color-mix(in srgb, var(--accent-success) 88%, white);
-  color: #04110a;
+  color: #052e16;
   border-color: color-mix(in srgb, var(--accent-success) 68%, black);
 }
 
@@ -521,7 +521,7 @@ tr:hover td {
 
 .badge-warning {
   background: color-mix(in srgb, var(--accent-warning) 18%, transparent);
-  color: #f4da2d;
+  color: var(--accent-warning);
   border: 1px solid color-mix(in srgb, var(--accent-warning) 32%, transparent);
 }
 
@@ -569,7 +569,7 @@ tr:hover td {
 .alert-warning {
   background: color-mix(in srgb, var(--accent-warning) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-warning) 30%, transparent);
-  color: #f4da2d;
+  color: var(--accent-warning);
 }
 
 .alert-danger,

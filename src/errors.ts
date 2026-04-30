@@ -24,9 +24,6 @@ const errorMessages: Record<string, string> = {
   key_already_reverted: 'Essa key já foi revertida.',
   user_already_exists: 'Esse usuário já existe.',
 
-  // Créditos e planos
-  insufficient_credits: 'Créditos insuficientes.',
-  no_resale_plan: 'Plano de revenda não configurado.',
   plan_not_found: 'Plano não encontrado.',
 
   // Permissões

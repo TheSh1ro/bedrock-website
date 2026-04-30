@@ -1,50 +1,35 @@
 <!-- AdminView.vue -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useAdminStore, type User, type ResalePlan, type LicensePlan } from '@/stores/admin'
+import { useAdminStore, type User, type LicensePlan } from '@/stores/admin'
 import { useToastStore } from '@/stores/toast'
 
 const adminStore = useAdminStore()
 const toastStore = useToastStore()
 
 const showPlanModal = ref(false)
-const showCreditsModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const showLogoutModal = ref(false)
+const showGeneratedKeyModal = ref(false)
+const generatedActivationKey = ref('')
+const generatedActivationDays = ref(3)
 
 const loginEmail = ref('')
 const loginPassword = ref('')
 
-// ─── Plan modal (shared for resale + license) ──────────────────────────────
-
-type PlanModalMode = 'resale' | 'license'
+// ─── Plan modal ─────────────────────────────────────────────────────────────
 
 const planModal = ref({
-  mode: 'resale' as PlanModalMode,
   duration_days: '' as '' | number,
   price: '' as '' | number,
-  is_active: true,
   isNew: false,
 })
 
-function openResalePlanModal(plan?: ResalePlan) {
-  planModal.value = {
-    mode: 'resale',
-    duration_days: plan?.duration_days ?? '',
-    price: plan?.price ?? '',
-    is_active: plan?.is_active ?? true,
-    isNew: !plan,
-  }
-  showPlanModal.value = true
-}
-
 function openLicensePlanModal(plan?: LicensePlan) {
   planModal.value = {
-    mode: 'license',
     duration_days: plan?.duration_days ?? '',
     price: plan?.price ?? '',
-    is_active: true,
     isNew: !plan,
   }
   showPlanModal.value = true
@@ -63,30 +48,12 @@ async function savePlan() {
     return
   }
 
-  if (planModal.value.mode === 'resale') {
-    const result = await adminStore.saveResalePlan(days, price, planModal.value.is_active)
-    if (result.ok) {
-      toastStore.success('Plano de revenda salvo!')
-      showPlanModal.value = false
-    } else toastStore.error(result.error)
-  } else {
-    const result = await adminStore.saveLicensePlan(days, price)
-    if (result.ok) {
-      toastStore.success('Plano de licença salvo!')
-      showPlanModal.value = false
-    } else toastStore.error(result.error)
-  }
+  const result = await adminStore.saveLicensePlan(days, price)
+  if (result.ok) {
+    toastStore.success('Plano de licença salvo!')
+    showPlanModal.value = false
+  } else toastStore.error(result.error)
 }
-
-// ─── Credits modal ──────────────────────────────────────────────────────────
-
-const creditsForm = ref({
-  userId: '',
-  username: '',
-  current: 0,
-  amount: '',
-  operation: 'add' as 'add' | 'remove',
-})
 
 // ─── Edit user modal ─────────────────────────────────────────────────────────
 
@@ -107,8 +74,8 @@ watch(
     if (!authed) return
     await Promise.all([
       adminStore.loadUsers(),
-      adminStore.loadResalePlans(),
       adminStore.loadLicensePlans(),
+      adminStore.loadActivationKeys(),
     ])
   },
   { immediate: true },
@@ -125,40 +92,6 @@ async function adminLogin() {
   if (ok) {
     loginEmail.value = ''
     loginPassword.value = ''
-  }
-}
-
-function openCreditsModal(user: User) {
-  creditsForm.value = {
-    userId: user.id,
-    username: user.username,
-    current: user.credits,
-    amount: '',
-    operation: 'add',
-  }
-  showCreditsModal.value = true
-}
-
-async function saveCredits() {
-  const amount = parseFloat(creditsForm.value.amount)
-  if (!amount || amount <= 0) {
-    toastStore.error('Informe um valor válido')
-    return
-  }
-
-  const result = await adminStore.adjustCredits(
-    creditsForm.value.userId,
-    amount,
-    creditsForm.value.operation,
-  )
-
-  if (result.ok) {
-    toastStore.success(
-      `${amount} créditos ${creditsForm.value.operation === 'add' ? 'adicionados' : 'removidos'} para ${creditsForm.value.username}`,
-    )
-    showCreditsModal.value = false
-  } else {
-    toastStore.error(result.error)
   }
 }
 
@@ -224,15 +157,32 @@ async function confirmLogout() {
   showLogoutModal.value = false
 }
 
-function expandUser(user: User) {
-  const isSameUserOpen = adminStore.showUserPanel && adminStore.selectedUser?.id === user.id
-
-  if (isSameUserOpen) {
-    adminStore.closeUserPanel()
+async function generateActivationKey() {
+  const result = await adminStore.generateActivationKey()
+  if (!result.ok) {
+    toastStore.error(result.error)
     return
   }
 
-  adminStore.selectUser(user)
+  generatedActivationKey.value = result.key
+  generatedActivationDays.value = result.durationDays
+  showGeneratedKeyModal.value = true
+  toastStore.success('Key de ativação gerada.')
+}
+
+async function copyGeneratedKey() {
+  if (!generatedActivationKey.value) return
+  await navigator.clipboard.writeText(generatedActivationKey.value)
+  toastStore.success('Key copiada.')
+}
+
+async function deleteActivationKey(keyId: string) {
+  const result = await adminStore.deleteActivationKey(keyId)
+  if (!result.ok) {
+    toastStore.error(result.error)
+    return
+  }
+  toastStore.success('Key excluída.')
 }
 
 function formatDate(iso: string | null) {
@@ -363,66 +313,8 @@ function daysLeft(iso: string | null) {
         </div>
       </div>
 
-      <!-- ── Resale Plans ── -->
-      <div class="card" style="margin-bottom: var(--space-5)">
-        <div class="card-header">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="section-card-title">Planos de Revenda</h2>
-              <p class="section-card-sub">Keys geradas pelos revendedores</p>
-            </div>
-            <button class="btn btn-secondary btn-sm" @click="openResalePlanModal()">
-              + Novo Plano
-            </button>
-          </div>
-        </div>
-        <div class="card-body" style="padding: 0">
-          <div
-            v-if="adminStore.loading.resalePlans"
-            class="empty-state"
-            style="padding: var(--space-6)"
-          >
-            <span class="spinner" />
-            <p>Carregando...</p>
-          </div>
-          <div
-            v-else-if="adminStore.resalePlans.length === 0"
-            class="empty-state"
-            style="padding: var(--space-6)"
-          >
-            <p>Nenhum plano de revenda cadastrado.</p>
-          </div>
-          <table v-else>
-            <thead>
-              <tr>
-                <th>Duração</th>
-                <th>Preço (créditos)</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="plan in adminStore.resalePlans" :key="plan.duration_days">
-                <td class="mono" style="font-weight: 600">{{ plan.duration_days }} dias</td>
-                <td class="mono" style="color: var(--accent-primary)">{{ plan.price }}</td>
-                <td>
-                  <span :class="['badge', plan.is_active ? 'badge-success' : 'badge-danger']">
-                    {{ plan.is_active ? 'Ativo' : 'Desativado' }}
-                  </span>
-                </td>
-                <td>
-                  <button class="btn btn-ghost btn-sm" @click="openResalePlanModal(plan)">
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- ── License Plans ── -->
-      <div class="card" style="margin-bottom: var(--space-6)">
+      <div class="card" style="margin-bottom: var(--space-5)">
         <div class="card-header">
           <div class="flex items-center justify-between">
             <div>
@@ -454,14 +346,14 @@ function daysLeft(iso: string | null) {
             <thead>
               <tr>
                 <th>Duração</th>
-                <th>Preço (créditos)</th>
+                <th>Preço (R$)</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="plan in adminStore.licensePlans" :key="plan.duration_days">
                 <td class="mono" style="font-weight: 600">{{ plan.duration_days }} dias</td>
-                <td class="mono" style="color: var(--accent-primary)">{{ plan.price }}</td>
+                <td class="mono" style="color: var(--accent-primary)">R$ {{ plan.price }}</td>
                 <td>
                   <button class="btn btn-ghost btn-sm" @click="openLicensePlanModal(plan)">
                     Editar
@@ -470,6 +362,85 @@ function daysLeft(iso: string | null) {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: var(--space-5)">
+        <div class="card-header">
+          <h2 class="section-card-title">Histórico de Keys de Ativação</h2>
+        </div>
+        <div class="card-body" style="padding: 0">
+          <div
+            v-if="adminStore.loading.activationKeys"
+            class="empty-state"
+            style="padding: var(--space-6)"
+          >
+            <span class="spinner" />
+            <p>Carregando keys...</p>
+          </div>
+          <div
+            v-else-if="adminStore.activationKeys.length === 0"
+            class="empty-state"
+            style="padding: var(--space-6)"
+          >
+            <p>Nenhuma key de ativação gerada.</p>
+          </div>
+          <table v-else>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Duração</th>
+                <th>Criada em</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="key in adminStore.activationKeys" :key="key.id">
+                <td class="mono" style="font-size: var(--text-xs); color: var(--accent-primary)">
+                  {{ key.key }}
+                </td>
+                <td class="mono">{{ key.duration_days }} dias</td>
+                <td class="mono">{{ formatDate(key.created_at) }}</td>
+                <td>
+                  <span :class="['badge', key.used ? 'badge-warning' : 'badge-success']">
+                    {{ key.used ? 'Usada' : 'Disponível' }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    v-if="!key.used"
+                    class="btn btn-danger btn-sm"
+                    :disabled="adminStore.loading.deleteActivationKey === key.id"
+                    @click="deleteActivationKey(key.id)"
+                  >
+                    <span class="spinner" v-if="adminStore.loading.deleteActivationKey === key.id" />
+                    <span v-else>Excluir</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Ativação por Key ── -->
+      <div class="card" style="margin-bottom: var(--space-5)">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="section-card-title">Keys de Ativação</h2>
+              <p class="section-card-sub">Gera key para criação de conta com 3 dias de licença</p>
+            </div>
+            <button
+              class="btn btn-primary btn-sm"
+              :disabled="adminStore.loading.generateActivationKey"
+              @click="generateActivationKey"
+            >
+              <span class="spinner" v-if="adminStore.loading.generateActivationKey" />
+              <span v-else>Gerar Key (3 dias)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -512,20 +483,19 @@ function daysLeft(iso: string | null) {
                 <th>Status</th>
                 <th>Licença</th>
                 <th>Dias</th>
-                <th>Créditos</th>
                 <th>Last seen</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="adminStore.filteredUsers.length === 0">
-                <td colspan="8" class="empty-state" style="padding: 3rem">
+                <td colspan="7" class="empty-state" style="padding: 3rem">
                   Nenhum operador encontrado.
                 </td>
               </tr>
 
               <template v-for="user in adminStore.filteredUsers" :key="user.id">
-                <tr class="user-row" @click="expandUser(user)">
+                <tr class="user-row">
                   <td>
                     <span class="mono" style="font-weight: 600; color: var(--text-primary)">
                       {{ user.username }}
@@ -545,9 +515,6 @@ function daysLeft(iso: string | null) {
                   <td class="mono" style="font-size: var(--text-xs)">
                     {{ daysLeft(user.software_access_until) }}
                   </td>
-                  <td class="mono" style="font-size: var(--text-sm); color: var(--accent-primary)">
-                    {{ user.credits }}
-                  </td>
                   <td class="mono" style="font-size: var(--text-xs)">
                     {{ lastSeenAgo(user.last_seen) }}
                   </td>
@@ -555,9 +522,6 @@ function daysLeft(iso: string | null) {
                     <div class="flex gap-2" @click.stop>
                       <button class="btn btn-ghost btn-sm" @click="openEditModal(user)">
                         Editar
-                      </button>
-                      <button class="btn btn-ghost btn-sm" @click="openCreditsModal(user)">
-                        Créditos
                       </button>
                       <button
                         class="btn btn-ghost btn-sm"
@@ -573,73 +537,6 @@ function daysLeft(iso: string | null) {
                   </td>
                 </tr>
 
-                <!-- Expanded user detail -->
-                <tr v-if="adminStore.selectedUser?.id === user.id && adminStore.showUserPanel">
-                  <td colspan="8" class="user-details">
-                    <div class="user-details-content">
-                      <div
-                        class="flex items-center justify-between"
-                        style="margin-bottom: var(--space-4)"
-                      >
-                        <div class="user-detail-header">
-                          <span class="mono" style="color: var(--accent-primary)">{{
-                            user.username
-                          }}</span>
-                          <span class="detail-sub">— HISTÓRICO DE KEYS</span>
-                        </div>
-                      </div>
-
-                      <div
-                        v-if="adminStore.loading.userKeys"
-                        class="empty-state"
-                        style="padding: var(--space-6)"
-                      >
-                        <span class="spinner" />
-                        <p>Carregando keys...</p>
-                      </div>
-
-                      <div
-                        v-else-if="adminStore.selectedUserKeys.length === 0"
-                        class="empty-state"
-                        style="padding: var(--space-8)"
-                      >
-                        <p>Nenhuma key gerada por este operador.</p>
-                      </div>
-
-                      <table v-else class="table-sm">
-                        <thead>
-                          <tr>
-                            <th>Key</th>
-                            <th>Duração</th>
-                            <th>Criada em</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="key in adminStore.selectedUserKeys" :key="key.id">
-                            <td
-                              class="mono"
-                              style="font-size: var(--text-xs); color: var(--accent-primary)"
-                            >
-                              {{ key.key }}
-                            </td>
-                            <td class="mono" style="font-size: var(--text-xs)">
-                              {{ key.duration_days }}d
-                            </td>
-                            <td class="mono" style="font-size: var(--text-xs)">
-                              {{ formatDate(key.created_at) }}
-                            </td>
-                            <td>
-                              <span v-if="key.reverted" class="badge badge-danger">Revertida</span>
-                              <span v-else-if="key.used" class="badge badge-warning">Usada</span>
-                              <span v-else class="badge badge-success">Disponível</span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </td>
-                </tr>
               </template>
             </tbody>
           </table>
@@ -647,14 +544,11 @@ function daysLeft(iso: string | null) {
       </div>
     </main>
 
-    <!-- ── MODAL: Plano (revenda ou licença) ── -->
+    <!-- ── MODAL: Plano de licença ── -->
     <div v-if="showPlanModal" class="modal-overlay" @click.self="showPlanModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">
-            {{ planModal.isNew ? 'Novo' : 'Editar' }}
-            {{ planModal.mode === 'resale' ? 'Plano de Revenda' : 'Plano de Licença' }}
-          </h3>
+          <h3 class="modal-title">{{ planModal.isNew ? 'Novo Plano de Licença' : 'Editar Plano de Licença' }}</h3>
         </div>
         <div class="modal-body space-y-4">
           <div class="form-group">
@@ -675,7 +569,7 @@ function daysLeft(iso: string | null) {
             </p>
           </div>
           <div class="form-group">
-            <label class="form-label">Preço (créditos)</label>
+            <label class="form-label">Preço (R$)</label>
             <input
               v-model="planModal.price"
               type="number"
@@ -685,101 +579,16 @@ function daysLeft(iso: string | null) {
               placeholder="Ex: 20"
             />
           </div>
-          <div v-if="planModal.mode === 'resale'" class="form-group">
-            <label class="flex items-center gap-2" style="cursor: pointer">
-              <input v-model="planModal.is_active" type="checkbox" class="form-checkbox" />
-              <span style="font-size: var(--text-sm); color: var(--text-secondary)"
-                >Plano ativo (visível para revendedores)</span
-              >
-            </label>
-          </div>
-          <div
-            v-if="planModal.mode === 'resale'"
-            class="form-hint"
-            style="margin-top: var(--space-2)"
-          >
-            ⚠ Ao criar um plano de revenda com nova duração, certifique-se de que esse mesmo valor
-            de duração existe na tabela de <strong>Planos de Licença</strong> (a FK da tabela keys
-            exige isso).
-          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" @click="showPlanModal = false">Cancelar</button>
           <button
             class="btn btn-primary"
             @click="savePlan"
-            :disabled="adminStore.loading.saveResalePlan || adminStore.loading.saveLicensePlan"
+            :disabled="adminStore.loading.saveLicensePlan"
           >
-            <span
-              class="spinner"
-              v-if="adminStore.loading.saveResalePlan || adminStore.loading.saveLicensePlan"
-            />
+            <span class="spinner" v-if="adminStore.loading.saveLicensePlan" />
             <span v-else>Salvar</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── MODAL: Créditos ── -->
-    <div v-if="showCreditsModal" class="modal-overlay" @click.self="showCreditsModal = false">
-      <div class="modal">
-        <div class="modal-header">
-          <h3 class="modal-title">Ajustar Créditos</h3>
-        </div>
-        <div class="modal-body space-y-4">
-          <div class="credits-user-row">
-            <span class="mono" style="color: var(--accent-primary)">{{
-              creditsForm.username
-            }}</span>
-            <span class="cred-current-badge">
-              <span class="ccb-label">SALDO</span>
-              <span class="ccb-value">{{ creditsForm.current }}</span>
-            </span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Operação</label>
-            <div class="op-toggle">
-              <label class="op-option" :class="{ active: creditsForm.operation === 'add' }">
-                <input
-                  v-model="creditsForm.operation"
-                  type="radio"
-                  value="add"
-                  style="display: none"
-                />
-                + Adicionar
-              </label>
-              <label class="op-option" :class="{ active: creditsForm.operation === 'remove' }">
-                <input
-                  v-model="creditsForm.operation"
-                  type="radio"
-                  value="remove"
-                  style="display: none"
-                />
-                − Remover
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Quantidade</label>
-            <input
-              v-model="creditsForm.amount"
-              type="number"
-              class="form-input"
-              min="1"
-              step="1"
-              placeholder="0"
-            />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" @click="showCreditsModal = false">Cancelar</button>
-          <button
-            class="btn btn-primary"
-            @click="saveCredits"
-            :disabled="adminStore.loading.adjustCredits"
-          >
-            <span class="spinner" v-if="adminStore.loading.adjustCredits" />
-            <span v-else>{{ creditsForm.operation === 'add' ? 'Adicionar' : 'Remover' }}</span>
           </button>
         </div>
       </div>
@@ -863,6 +672,34 @@ function daysLeft(iso: string | null) {
         <div class="modal-footer">
           <button class="btn btn-ghost" @click="showDeleteModal = false">Cancelar</button>
           <button class="btn btn-danger" @click="confirmDelete">Desativar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODAL: Key Gerada ── -->
+    <div
+      v-if="showGeneratedKeyModal"
+      class="modal-overlay"
+      @click.self="showGeneratedKeyModal = false"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Key de Ativação Gerada</h3>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-secondary); margin-bottom: var(--space-3)">
+            Esta key cria uma conta com <strong>{{ generatedActivationDays }} dias</strong> de
+            licença.
+          </p>
+          <div class="activation-key-box mono">
+            {{ generatedActivationKey }}
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top: var(--space-3)" @click="copyGeneratedKey">
+            Copiar key
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" @click="showGeneratedKeyModal = false">Fechar</button>
         </div>
       </div>
     </div>
@@ -1142,80 +979,21 @@ function daysLeft(iso: string | null) {
   color: var(--text-muted);
 }
 
-/* Credits modal */
-.credits-user-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--wire);
-  margin-bottom: var(--space-2);
-}
-
-.cred-current-badge {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 32%, transparent);
-  border-radius: 999px;
-  padding: var(--space-1) var(--space-3);
-}
-
-.ccb-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--accent-primary);
-}
-
-.ccb-value {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--accent-primary);
-}
-
-/* Operation toggle */
-.op-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--wire-active);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.op-option {
-  flex: 1;
-  padding: 0.65rem 1rem;
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-  cursor: pointer;
-  color: var(--text-muted);
-  background: var(--bg-void);
-  transition: all var(--transition-fast);
-  user-select: none;
-}
-
-.op-option:first-child {
-  border-right: 1px solid var(--wire-active);
-}
-
-.op-option.active {
-  background: color-mix(in srgb, var(--accent-secondary) 16%, transparent);
-  color: var(--text-primary);
-}
-
 /* Edit user tag */
 .edit-user-tag {
   font-size: var(--text-lg);
   font-weight: 700;
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--wire);
+}
+
+.activation-key-box {
+  background: var(--bg-void);
+  border: 1px solid var(--wire-active);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  color: var(--accent-primary);
+  font-size: var(--text-sm);
+  word-break: break-all;
 }
 </style>

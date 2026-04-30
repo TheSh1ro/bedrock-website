@@ -10,7 +10,6 @@ export interface User {
   username: string
   email: string | null
   is_active: boolean
-  credits: number
   software_access_until: string | null
   active_token: string | null
   machine_id: string | null
@@ -18,30 +17,23 @@ export interface User {
   created_at: string
 }
 
-export interface UserKey {
-  id: string
-  key: string
-  duration_days: number
-  price: number
-  created_at: string
-  used: boolean
-  used_at: string | null
-  reverted: boolean
-  reverted_at: string | null
-}
-
-export interface ResalePlan {
-  duration_days: number
-  price: number
-  is_active: boolean
-}
-
 export interface LicensePlan {
   duration_days: number
   price: number
 }
 
-type UserPatch = Partial<Omit<User, 'id' | 'created_at'>>
+export interface ActivationKey {
+  id: string
+  key: string
+  duration_days: number
+  created_at: string
+  used: boolean
+  used_at: string | null
+}
+
+type UserPatch = Partial<Omit<User, 'id' | 'created_at'>> & {
+  password_hash?: string
+}
 
 // ─── Store ────────────────────────────────────────────────────────────────────
 
@@ -49,23 +41,20 @@ export const useAdminStore = defineStore('admin', () => {
   // ─── State ─────────────────────────────────────────────────────────────────
 
   const users = ref<User[]>([])
-  const selectedUserKeys = ref<UserKey[]>([])
-  const resalePlans = ref<ResalePlan[]>([])
   const licensePlans = ref<LicensePlan[]>([])
+  const activationKeys = ref<ActivationKey[]>([])
   const searchQuery = ref('')
   const selectedUser = ref<User | null>(null)
-  const showUserPanel = ref(false)
 
   const loading = ref({
     users: false,
-    resalePlans: false,
     licensePlans: false,
-    saveResalePlan: false,
+    activationKeys: false,
     saveLicensePlan: false,
-    adjustCredits: false,
+    generateActivationKey: false,
+    deleteActivationKey: null as string | null,
     saveUser: false,
     auth: false,
-    userKeys: false,
   })
 
   const error = ref('')
@@ -138,16 +127,6 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function loadResalePlans(): Promise<void> {
-    loading.value.resalePlans = true
-    try {
-      const data = await adminFetch('resale_plans?order=duration_days.asc')
-      resalePlans.value = data as ResalePlan[]
-    } finally {
-      loading.value.resalePlans = false
-    }
-  }
-
   async function loadLicensePlans(): Promise<void> {
     loading.value.licensePlans = true
     try {
@@ -155,41 +134,6 @@ export const useAdminStore = defineStore('admin', () => {
       licensePlans.value = data as LicensePlan[]
     } finally {
       loading.value.licensePlans = false
-    }
-  }
-
-  async function loadUserKeys(userId: string): Promise<void> {
-    loading.value.userKeys = true
-    selectedUserKeys.value = []
-    try {
-      const result = await adminRpc<{ status: string; keys: UserKey[] }>('admin_get_user_keys', {
-        p_user_id: userId,
-      })
-      if (result.ok) selectedUserKeys.value = result.data.keys ?? []
-    } finally {
-      loading.value.userKeys = false
-    }
-  }
-
-  async function saveResalePlan(
-    days: number,
-    price: number,
-    isActive: boolean,
-  ): Promise<{ ok: true } | { ok: false; error: string }> {
-    loading.value.saveResalePlan = true
-    try {
-      const result = await adminRpc('admin_update_resale_plan', {
-        p_duration_days: days,
-        p_price: price,
-        p_is_active: isActive,
-      })
-
-      if (!result.ok) return result
-
-      await loadResalePlans()
-      return { ok: true }
-    } finally {
-      loading.value.saveResalePlan = false
     }
   }
 
@@ -213,33 +157,16 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function adjustCredits(
-    userId: string,
-    amount: number,
-    operation: 'add' | 'remove',
-  ): Promise<{ ok: true; previous: number; new: number } | { ok: false; error: string }> {
-    loading.value.adjustCredits = true
+  async function loadActivationKeys(): Promise<void> {
+    loading.value.activationKeys = true
     try {
-      const result = await adminRpc<{
-        status: string
-        previous_credits: number
-        new_credits: number
-      }>('admin_adjust_credits', {
-        p_user_id: userId,
-        p_amount: amount,
-        p_operation: operation,
-      })
-
-      if (!result.ok) return result
-
-      await loadUsers()
-      return {
-        ok: true,
-        previous: result.data.previous_credits,
-        new: result.data.new_credits,
-      }
+      const result = await adminRpc<{ status: string; keys: ActivationKey[] }>(
+        'admin_get_activation_keys',
+        {},
+      )
+      if (result.ok) activationKeys.value = result.data.keys ?? []
     } finally {
-      loading.value.adjustCredits = false
+      loading.value.activationKeys = false
     }
   }
 
@@ -249,16 +176,39 @@ export const useAdminStore = defineStore('admin', () => {
   ): Promise<{ ok: true } | { ok: false; error: string }> {
     loading.value.saveUser = true
     try {
-      await adminFetch(`users?id=eq.${userId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(patch),
+      const result = await adminRpc('admin_update_user', {
+        p_user_id: userId,
+        p_is_active: patch.is_active ?? true,
+        p_password_hash: patch.password_hash ?? null,
+        p_software_access_until: patch.software_access_until ?? null,
       })
+      if (!result.ok) return result
+
       await loadUsers()
       return { ok: true }
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : 'Erro inesperado.' }
     } finally {
       loading.value.saveUser = false
+    }
+  }
+
+  async function generateActivationKey(): Promise<
+    { ok: true; key: string; durationDays: number } | { ok: false; error: string }
+  > {
+    loading.value.generateActivationKey = true
+    try {
+      const result = await adminRpc<{ status: string; key: string; duration_days: number }>(
+        'admin_generate_activation_key',
+        {},
+      )
+      if (!result.ok) return result
+      await loadActivationKeys()
+      return {
+        ok: true,
+        key: result.data.key,
+        durationDays: result.data.duration_days,
+      }
+    } finally {
+      loading.value.generateActivationKey = false
     }
   }
 
@@ -270,28 +220,36 @@ export const useAdminStore = defineStore('admin', () => {
     await loadUsers()
   }
 
+  async function deleteActivationKey(keyId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    loading.value.deleteActivationKey = keyId
+    try {
+      const result = await adminRpc('admin_delete_activation_key', {
+        p_key_id: keyId,
+      })
+      if (!result.ok) return result
+      await loadActivationKeys()
+      return { ok: true }
+    } finally {
+      loading.value.deleteActivationKey = null
+    }
+  }
+
   function selectUser(user: User): void {
     selectedUser.value = user
-    showUserPanel.value = true
-    loadUserKeys(user.id)
   }
 
   function closeUserPanel(): void {
     selectedUser.value = null
-    selectedUserKeys.value = []
-    showUserPanel.value = false
   }
 
   return {
     users,
-    selectedUserKeys,
-    resalePlans,
     licensePlans,
+    activationKeys,
     searchQuery,
     loading,
     error,
     selectedUser,
-    showUserPanel,
     supabaseAuthed,
     filteredUsers,
     stats,
@@ -299,12 +257,11 @@ export const useAdminStore = defineStore('admin', () => {
     login,
     logout,
     loadUsers,
-    loadResalePlans,
     loadLicensePlans,
-    loadUserKeys,
-    saveResalePlan,
+    loadActivationKeys,
     saveLicensePlan,
-    adjustCredits,
+    generateActivationKey,
+    deleteActivationKey,
     updateUser,
     forceLogout,
     selectUser,

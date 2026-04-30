@@ -29,18 +29,6 @@ const router = createRouter({
           meta: { title: 'Minha Licença' },
         },
         {
-          path: 'resale',
-          name: 'resale',
-          component: () => import('@/components/TabResale.vue'),
-          meta: { title: 'Revenda de Keys' },
-        },
-        {
-          path: 'credits',
-          name: 'credits',
-          component: () => import('@/components/TabCredits.vue'),
-          meta: { title: 'Comprar Créditos' },
-        },
-        {
           path: 'transactions',
           name: 'transactions',
           component: () => import('@/components/TabTransactions.vue'),

@@ -1,8 +1,6 @@
 <!-- components/TabLicense.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { useToastStore } from '@/stores/toast'
 
 interface Plan {
   days: number
@@ -10,39 +8,23 @@ interface Plan {
 }
 
 const userStore = useUserStore()
-const toastStore = useToastStore()
-
-const showBuyModal = ref(false)
-const selectedPlan = ref<Plan | null>(null)
+const DISCORD_USER_URL = 'discord://-/users/650180750871756826'
 
 function formatDate(date: string | null | undefined) {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('pt-BR')
 }
 
-function confirmBuy(plan: Plan) {
-  selectedPlan.value = plan
-  showBuyModal.value = true
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
-function canBuyPlan(plan: Plan) {
-  return (userStore.profile?.credits || 0) >= plan.price && userStore.loading.buyDays !== plan.days
-}
-
-function buyFromCard(plan: Plan) {
-  if (!canBuyPlan(plan)) return
-  confirmBuy(plan)
-}
-
-async function handleBuy() {
-  if (!selectedPlan.value) return
-  const result = await userStore.buyDays(selectedPlan.value.days)
-  if (result.ok) {
-    toastStore.success(result.message || 'Dias adicionados!')
-    showBuyModal.value = false
-  } else {
-    toastStore.error(result.error || 'Erro ao comprar dias')
-  }
+function openDiscordUser() {
+  window.location.href = DISCORD_USER_URL
 }
 </script>
 
@@ -83,7 +65,7 @@ async function handleBuy() {
         <div class="card-header-inner">
           <div>
             <h2 class="card-title">Estender Licença</h2>
-            <p class="card-subtitle">Adicione dias de acesso usando seus créditos</p>
+            <p class="card-subtitle">Escolha um plano e finalize a compra pelo Discord</p>
           </div>
         </div>
       </div>
@@ -96,52 +78,25 @@ async function handleBuy() {
             :class="{
               featured: plan.days === 30,
               'purchase-card': true,
-              disabled: !canBuyPlan(plan),
             }"
             role="button"
-            :tabindex="canBuyPlan(plan) ? 0 : -1"
-            @click="buyFromCard(plan)"
-            @keydown.enter.prevent="buyFromCard(plan)"
-            @keydown.space.prevent="buyFromCard(plan)"
+            tabindex="0"
+            @click="openDiscordUser"
+            @keydown.enter.prevent="openDiscordUser"
+            @keydown.space.prevent="openDiscordUser"
           >
             <div class="plan-header">
               <h3 class="plan-name">{{ plan.days }} Dias</h3>
               <p class="plan-description">Acesso completo</p>
             </div>
             <div class="plan-price">
-              <span class="plan-price-value">{{ plan.price }}</span>
-              <span class="plan-price-unit">créditos</span>
+              <span class="plan-price-value">{{ formatCurrency(plan.price) }}</span>
             </div>
             <div class="purchase-card-action">
-              <span v-if="userStore.loading.buyDays === plan.days" class="spinner" />
-              <span v-else>{{ canBuyPlan(plan) ? 'COMPRAR' : 'SALDO INSUFICIENTE' }}</span>
+              COMPRAR NO DISCORD
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MODAL: Comprar Dias ── -->
-  <div v-if="showBuyModal" class="modal-overlay" @click.self="showBuyModal = false">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Confirmar Compra</h3>
-      </div>
-      <div class="modal-body">
-        <p style="color: var(--text-secondary)">
-          Adicionar
-          <strong style="color: var(--text-primary)">{{ selectedPlan?.days }} dias</strong> à sua
-          licença?
-        </p>
-        <div class="confirm-row">
-          <span class="confirm-label">CUSTO TOTAL</span>
-          <span class="confirm-value mono">{{ selectedPlan?.price }} créditos</span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" @click="showBuyModal = false">Cancelar</button>
-        <button class="btn btn-primary" @click="handleBuy">Confirmar</button>
       </div>
     </div>
   </div>
@@ -196,39 +151,8 @@ async function handleBuy() {
   color: var(--accent-success);
 }
 
-.confirm-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--space-5);
-  padding: var(--space-4) var(--space-5);
-  background: color-mix(in srgb, var(--surface-glass) 82%, #171717);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
-}
-
-.confirm-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-}
-
-.confirm-value {
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--accent-primary);
-}
-
 .purchase-card {
   cursor: pointer;
-}
-
-.purchase-card.disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .purchase-card-action {
@@ -241,9 +165,5 @@ async function handleBuy() {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent-primary);
-}
-
-.purchase-card.disabled .purchase-card-action {
-  color: var(--text-muted);
 }
 </style>

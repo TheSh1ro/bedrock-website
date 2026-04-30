@@ -334,9 +334,7 @@ function download(): void {
 }
 
 function copyCommand(): void {
-  navigator.clipboard.writeText(
-    'reg add "HKCU\\Software\\ytb-mp3" /v alternative_mode /t REG_DWORD /d 0 /f',
-  )
+  navigator.clipboard.writeText('https://www.youtube.com/watch?v=Aq5WXmQQooo')
   copySuccess.value = true
   setTimeout(() => (copySuccess.value = false), 2000)
 }

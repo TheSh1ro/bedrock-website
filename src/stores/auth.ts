@@ -10,7 +10,6 @@ export interface UserProfile {
   email: string | null
   is_admin: boolean
   is_active: boolean
-  credits: number
   software_access_until: string | null
 }
 
@@ -20,7 +19,6 @@ interface GetUserProfileResponse extends RpcResponse {
   email: string | null
   is_admin: boolean
   is_active: boolean
-  credits: number
   software_access_until: string | null
 }
 
@@ -137,7 +135,6 @@ export const useAuthStore = defineStore('auth', () => {
       email: result.data.email,
       is_admin: result.data.is_admin,
       is_active: result.data.is_active,
-      credits: result.data.credits,
       software_access_until: result.data.software_access_until,
     }
 

@@ -1,6 +1,6 @@
 <!-- components/TabTransactions.vue -->
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -11,8 +11,40 @@ onMounted(() => {
   }
 })
 
-function isCredit(amount: number) {
+function isIncoming(amount: number) {
   return amount > 0
+}
+
+const VISIBLE_TYPES = new Set([
+  'days_purchase',
+  'license_extension',
+  'admin_license_add',
+  'admin_license_edit',
+  'admin_duration_edit',
+  'admin_plan_update',
+  'admin_user_update',
+])
+
+const transactionsView = computed(() =>
+  userStore.transactions
+    .filter((tx) => VISIBLE_TYPES.has(tx.type) || tx.type.startsWith('admin_'))
+    .map((tx) => ({
+      ...tx,
+      label: mapLabel(tx.type, tx.reference_id, tx.label),
+      category: tx.type.startsWith('admin_') ? 'Ação administrativa' : 'Compra',
+    })),
+)
+
+function mapLabel(type: string, referenceId: string, fallback: string) {
+  if (type === 'days_purchase') return `Compra de licença (${referenceId} dias)`
+  if (type === 'license_extension') return `Extensão de licença (${referenceId} dias)`
+  if (type === 'admin_license_add') return 'Licença adicionada pelo administrador'
+  if (type === 'admin_license_edit') return 'Licença editada pelo administrador'
+  if (type === 'admin_duration_edit') return 'Duração da licença ajustada pelo administrador'
+  if (type === 'admin_plan_update') return 'Plano de licença atualizado pelo administrador'
+  if (type === 'admin_user_update') return 'Dados do usuário editados pelo administrador'
+  if (type.startsWith('admin_')) return 'Ajuste administrativo'
+  return fallback || type
 }
 
 function formatDateTime(date: string | null) {
@@ -34,7 +66,7 @@ function formatDateTime(date: string | null) {
         <div class="card-header-inner">
           <div>
             <h2 class="card-title">Histórico de Transações</h2>
-            <p class="card-subtitle">Registro de movimentações de créditos da sua conta</p>
+            <p class="card-subtitle">Compras e ações administrativas de licença</p>
           </div>
           <button
             class="btn btn-ghost"
@@ -55,11 +87,11 @@ function formatDateTime(date: string | null) {
       </div>
 
       <!-- Empty -->
-      <div v-else-if="userStore.transactions.length === 0" class="empty-state">
+      <div v-else-if="transactionsView.length === 0" class="empty-state">
         <div class="empty-state-icon">◈</div>
-        <p>Nenhuma transação registrada</p>
+        <p>Nenhum histórico disponível</p>
         <p style="font-size: var(--text-sm); margin-top: var(--space-1)">
-          As movimentações de crédito aparecerão aqui
+          As compras e ações administrativas aparecerão aqui
         </p>
       </div>
 
@@ -70,22 +102,26 @@ function formatDateTime(date: string | null) {
             <tr>
               <th style="width: 44px"></th>
               <th>Descrição</th>
+              <th>Categoria</th>
               <th>Data</th>
-              <th style="text-align: right">Créditos</th>
+              <th style="text-align: right">Valor</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="tx in userStore.transactions" :key="tx.id">
+            <tr v-for="tx in transactionsView" :key="tx.id">
               <td>
                 <div
                   class="tx-icon"
-                  :class="isCredit(tx.amount) ? 'tx-icon--credit' : 'tx-icon--debit'"
+                  :class="isIncoming(tx.amount) ? 'tx-icon--incoming' : 'tx-icon--outgoing'"
                 >
-                  {{ isCredit(tx.amount) ? '↑' : '↓' }}
+                  {{ isIncoming(tx.amount) ? '↑' : '↓' }}
                 </div>
               </td>
               <td>
                 <div class="tx-label">{{ tx.label }}</div>
+              </td>
+              <td>
+                <span class="tx-badge">{{ tx.category }}</span>
               </td>
               <td class="mono" style="font-size: var(--text-xs); color: var(--text-muted)">
                 {{ formatDateTime(tx.created_at) }}
@@ -93,7 +129,7 @@ function formatDateTime(date: string | null) {
               <td style="text-align: right">
                 <span
                   class="tx-amount"
-                  :class="isCredit(tx.amount) ? 'tx-amount--credit' : 'tx-amount--debit'"
+                  :class="isIncoming(tx.amount) ? 'tx-amount--incoming' : 'tx-amount--outgoing'"
                 >
                   {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
                 </span>
@@ -108,19 +144,19 @@ function formatDateTime(date: string | null) {
     <div class="tx-legend">
       <div class="tx-legend-item">
         <span
-          class="tx-icon tx-icon--credit"
+          class="tx-icon tx-icon--incoming"
           style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↑</span
         >
-        <span>Entrada de créditos</span>
+        <span>Entrada</span>
       </div>
       <div class="tx-legend-item">
         <span
-          class="tx-icon tx-icon--debit"
+          class="tx-icon tx-icon--outgoing"
           style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↓</span
         >
-        <span>Saída de créditos</span>
+        <span>Saída</span>
       </div>
     </div>
   </div>
@@ -139,13 +175,13 @@ function formatDateTime(date: string | null) {
   flex-shrink: 0;
 }
 
-.tx-icon--credit {
+.tx-icon--incoming {
   background: color-mix(in srgb, var(--accent-success-action) 18%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-success-action) 40%, transparent);
   color: var(--accent-success-action);
 }
 
-.tx-icon--debit {
+.tx-icon--outgoing {
   background: color-mix(in srgb, var(--accent-danger-action) 18%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-danger-action) 40%, transparent);
   color: var(--accent-danger-action);
@@ -159,14 +195,6 @@ function formatDateTime(date: string | null) {
   line-height: 1.3;
 }
 
-.tx-description {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-top: 2px;
-  line-height: 1.3;
-}
-
 .tx-amount {
   font-family: var(--font-display);
   font-size: var(--text-base);
@@ -174,16 +202,27 @@ function formatDateTime(date: string | null) {
   letter-spacing: 0.04em;
 }
 
-.tx-amount--credit {
+.tx-amount--incoming {
   color: var(--accent-success-action);
 }
-.tx-amount--debit {
+.tx-amount--outgoing {
   color: var(--accent-danger-action);
 }
 
 .tx-balance {
   font-size: var(--text-sm);
   color: var(--text-muted);
+}
+
+.tx-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--wire);
+  border-radius: var(--radius-sm);
+  padding: 0.18rem 0.45rem;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 .tx-legend {

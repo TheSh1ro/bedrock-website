@@ -3,8 +3,6 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   PanelLeft,
-  RefreshCw,
-  CreditCard,
   ArrowLeftRight,
   Download,
   Users,
@@ -83,11 +81,6 @@ function closeExpiredLicenseModal() {
   showExpiredLicenseModal.value = false
 }
 
-function goToCreditsFromExpiredModal() {
-  closeExpiredLicenseModal()
-  router.push({ name: 'credits' })
-}
-
 function goToLicenseFromExpiredModal() {
   closeExpiredLicenseModal()
   router.push({ name: 'license' })
@@ -99,11 +92,7 @@ onMounted(async () => {
   onlineInterval = setInterval(refreshOnline, 30_000)
   await authStore.loadProfile()
   syncExpiredLicenseModal()
-  await Promise.all([
-    userStore.loadKeys(),
-    userStore.loadResalePlans(),
-    userStore.loadLicensePlans(),
-  ])
+  await userStore.loadLicensePlans()
 })
 
 watch(
@@ -133,12 +122,6 @@ function formatDate(date: string | null) {
           <span>Celerity</span>
         </div>
         <nav class="header-nav">
-          <div class="header-pill">
-            <span class="pill-label">Créditos</span>
-            <span class="pill-value" style="color: var(--accent-primary)">{{
-              userStore.profile.credits
-            }}</span>
-          </div>
           <div class="header-pill">
             <span class="pill-label">Licença</span>
             <span class="pill-value" style="color: var(--accent-primary)">
@@ -189,29 +172,25 @@ function formatDate(date: string | null) {
     <main class="main-content container">
       <div class="stats-strip">
         <div class="stat-strip-item">
-          <span class="stat-strip-label">Total de Keys</span>
-          <span class="stat-strip-value">{{ userStore.keyStats.total }}</span>
+          <span class="stat-strip-label">Status</span>
+          <span
+            class="stat-strip-value"
+            :style="{
+              color: userStore.isExpired ? 'var(--accent-danger)' : 'var(--accent-success)',
+            }"
+          >
+            {{ userStore.isExpired ? 'Expirada' : 'Ativa' }}
+          </span>
         </div>
         <div class="stat-strip-divider"></div>
         <div class="stat-strip-item">
-          <span class="stat-strip-label">Disponíveis</span>
-          <span class="stat-strip-value" style="color: var(--accent-success)">{{
-            userStore.keyStats.available
-          }}</span>
+          <span class="stat-strip-label">Dias restantes</span>
+          <span class="stat-strip-value">{{ userStore.daysLeft }}</span>
         </div>
         <div class="stat-strip-divider"></div>
         <div class="stat-strip-item">
-          <span class="stat-strip-label">Usadas</span>
-          <span class="stat-strip-value" style="color: var(--accent-warning)">{{
-            userStore.keyStats.used
-          }}</span>
-        </div>
-        <div class="stat-strip-divider"></div>
-        <div class="stat-strip-item">
-          <span class="stat-strip-label">Revertidas</span>
-          <span class="stat-strip-value" style="color: var(--text-muted)">{{
-            userStore.keyStats.reverted
-          }}</span>
+          <span class="stat-strip-label">Expira em</span>
+          <span class="stat-strip-value">{{ formatDate(userStore.profile?.software_access_until) }}</span>
         </div>
         <div class="stat-strip-spacer"></div>
         <div class="stat-strip-status">
@@ -226,12 +205,6 @@ function formatDate(date: string | null) {
             <div class="side-nav-header">MÓDULOS</div>
             <RouterLink class="side-nav-item" :to="{ name: 'license' }" active-class="active">
               <PanelLeft class="side-nav-icon" />Minha Licença
-            </RouterLink>
-            <RouterLink class="side-nav-item" :to="{ name: 'resale' }" active-class="active">
-              <RefreshCw class="side-nav-icon" />Revenda de Keys
-            </RouterLink>
-            <RouterLink class="side-nav-item" :to="{ name: 'credits' }" active-class="active">
-              <CreditCard class="side-nav-icon" />Comprar Créditos
             </RouterLink>
             <RouterLink class="side-nav-item" :to="{ name: 'transactions' }" active-class="active">
               <ArrowLeftRight class="side-nav-icon" />Transações
@@ -313,11 +286,8 @@ function formatDate(date: string | null) {
           Sua licença está expirada. Para continuar usando todos os recursos, escolha uma opção:
         </div>
         <div class="modal-footer expired-license-actions">
-          <button class="btn btn-primary" type="button" @click="goToCreditsFromExpiredModal">
-            Comprar créditos
-          </button>
-          <button class="btn btn-secondary" type="button" @click="goToLicenseFromExpiredModal">
-            Ver minha licença
+          <button class="btn btn-primary" type="button" @click="goToLicenseFromExpiredModal">
+            Ver planos
           </button>
           <button class="btn btn-ghost" type="button" @click="closeExpiredLicenseModal">OK</button>
         </div>
