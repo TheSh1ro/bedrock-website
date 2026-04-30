@@ -1098,4 +1098,5 @@ tr:hover td {
 }
 .plan-card:hover {
   border-color: color-mix(in srgb, var(--accent-primary) 46%, transparent);
+  transform: translateY(-2px);
 }
