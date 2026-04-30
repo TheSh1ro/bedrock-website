@@ -1,14 +1,7 @@
 <!-- UserView.vue -->
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import {
-  PanelLeft,
-  ArrowLeftRight,
-  Download,
-  Users,
-  ShieldCheck,
-  Shield,
-} from 'lucide-vue-next'
+import { PanelLeft, ArrowLeftRight, Download, Users, ShieldCheck, Shield } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
@@ -20,7 +13,7 @@ const userStore = useUserStore()
 const toastStore = useToastStore()
 
 // ── Online users counter (fake / demo) ──
-const TOTAL_REGISTERED = 11
+const TOTAL_REGISTERED = 33
 const onlineCount = ref(0)
 const profileMenuOpen = ref(false)
 const profileImageError = ref(false)
@@ -170,35 +163,6 @@ function formatDate(date: string | null) {
     </header>
 
     <main class="main-content container">
-      <div class="stats-strip">
-        <div class="stat-strip-item">
-          <span class="stat-strip-label">Status</span>
-          <span
-            class="stat-strip-value"
-            :style="{
-              color: userStore.isExpired ? 'var(--accent-danger)' : 'var(--accent-success)',
-            }"
-          >
-            {{ userStore.isExpired ? 'Expirada' : 'Ativa' }}
-          </span>
-        </div>
-        <div class="stat-strip-divider"></div>
-        <div class="stat-strip-item">
-          <span class="stat-strip-label">Dias restantes</span>
-          <span class="stat-strip-value">{{ userStore.daysLeft }}</span>
-        </div>
-        <div class="stat-strip-divider"></div>
-        <div class="stat-strip-item">
-          <span class="stat-strip-label">Expira em</span>
-          <span class="stat-strip-value">{{ formatDate(userStore.profile?.software_access_until) }}</span>
-        </div>
-        <div class="stat-strip-spacer"></div>
-        <div class="stat-strip-status">
-          <span class="status-dot" :class="userStore.isExpired ? 'expired' : 'active'"></span>
-          <span>{{ userStore.isExpired ? 'LICENÇA EXPIRADA' : 'LICENÇA ATIVA' }}</span>
-        </div>
-      </div>
-
       <div class="dash-layout">
         <aside class="dash-sidebar">
           <nav class="side-nav">
@@ -354,67 +318,6 @@ function formatDate(date: string | null) {
 .dash-content {
   display: grid;
   gap: var(--space-6);
-}
-
-.stats-strip {
-  display: flex;
-  align-items: center;
-  background: color-mix(in srgb, var(--surface-glass) 84%, #171717);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-6);
-  margin-bottom: var(--space-6);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.stat-strip-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 var(--space-5);
-}
-.stat-strip-item:first-child {
-  padding-left: 0;
-}
-
-.stat-strip-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-}
-
-.stat-strip-value {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.stat-strip-divider {
-  width: 1px;
-  height: 36px;
-  background: var(--wire);
-  flex-shrink: 0;
-}
-.stat-strip-spacer {
-  flex: 1;
-}
-
-.stat-strip-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
 }
 
 .dash-layout {
