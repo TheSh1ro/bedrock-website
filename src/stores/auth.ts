@@ -55,6 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = newToken
     localStorage.setItem('session_token', newToken)
     localStorage.setItem('software_access_until', accessUntil)
+    document.cookie = `session_token=${encodeURIComponent(newToken)}; Path=/; SameSite=Lax`
   }
 
   function clearSession() {
@@ -62,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     localStorage.removeItem('session_token')
     localStorage.removeItem('software_access_until')
+    document.cookie = 'session_token=; Path=/; Max-Age=0; SameSite=Lax'
   }
 
   function logout() {
@@ -122,6 +124,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function completeSsoLogin(webToken: string, accessUntil: string | null) {
+    persistToken(webToken, accessUntil ?? '')
+    user.value = null
+  }
+
   async function loadProfile(): Promise<boolean> {
     if (!token.value) return false
 
@@ -149,6 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isAdmin,
     login,
+    completeSsoLogin,
+    clearSession,
     logout,
     loadProfile,
   }

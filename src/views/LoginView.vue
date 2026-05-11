@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { resolveError } from '@/errors'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const route = useRoute()
 
 const username = ref('')
 const password = ref('')
@@ -10,6 +13,15 @@ const email = ref('')
 const referralCode = ref('')
 const isRegistering = ref(false)
 const showPassword = ref(false)
+
+watch(
+  () => route.query.error,
+  (value) => {
+    const status = Array.isArray(value) ? value[0] : value
+    if (status) authStore.error = resolveError(status)
+  },
+  { immediate: true },
+)
 
 async function handleSubmit() {
   const success = await authStore.login(

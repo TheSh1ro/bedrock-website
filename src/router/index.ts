@@ -11,6 +11,12 @@ const router = createRouter({
       meta: { guestOnly: true, title: 'Login' },
     },
     {
+      path: '/auth/sso',
+      name: 'sso',
+      component: () => import('../views/SsoView.vue'),
+      meta: { title: 'Autenticando' },
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('../views/AdminView.vue'),
@@ -51,6 +57,8 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
   document.title = to.meta.title ? `${to.meta.title} | ${APP_NAME}` : APP_NAME
+
+  if (to.name === 'sso') return
 
   if (auth.token && !auth.user) {
     await auth.loadProfile()

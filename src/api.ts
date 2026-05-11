@@ -116,6 +116,13 @@ export async function userRpc<T extends RpcResponse>(
   }
 }
 
+export async function publicRpc<T extends RpcResponse>(
+  fn: string,
+  body: Record<string, unknown> = {},
+): Promise<T> {
+  return (await callRpc(fn, body, '')) as T
+}
+
 export async function adminRpc<T extends RpcResponse>(
   fn: string,
   body: Record<string, unknown> = {},

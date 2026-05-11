@@ -16,6 +16,10 @@ const errorMessages: Record<string, string> = {
   invalid_credentials: 'Usuário ou senha incorretos.',
   inactive: 'Conta desativada. Entre em contato com o suporte.',
   expired: 'Sua licença expirou.',
+  invalid_token: 'Link de acesso inválido.',
+  token_expired: 'Link de acesso expirado. Abra novamente pelo aplicativo.',
+  token_already_used: 'Este link de acesso já foi utilizado.',
+  missing_token: 'Link de acesso inválido.',
 
   // Ativação de key
   key_not_found: 'Key não encontrada.',
