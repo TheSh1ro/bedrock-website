@@ -78,7 +78,7 @@ async function handleSubmit() {
             v-model="username"
             type="text"
             class="form-input"
-            placeholder="Identificação de soldado"
+            placeholder="Digite aqui"
             autocomplete="username"
             required
           />

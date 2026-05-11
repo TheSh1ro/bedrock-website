@@ -130,7 +130,7 @@ function formatDate(date: string | null) {
             </span>
           </div>
           <div class="header-pill">
-            <span class="pill-label">Soldado</span>
+            <span class="pill-label">Usuário</span>
             <span class="pill-value mono">{{ userStore.profile.username }}</span>
           </div>
           <div class="profile-menu" ref="profileMenuRef">

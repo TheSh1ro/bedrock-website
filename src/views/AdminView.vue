@@ -1,6 +1,6 @@
 <!-- AdminView.vue -->
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAdminStore, type User, type LicensePlan } from '@/stores/admin'
 import { useToastStore } from '@/stores/toast'
 
@@ -215,6 +215,14 @@ function daysLeft(iso: string | null) {
   const diff = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000)
   return diff <= 0 ? 'expirado' : `${diff}d`
 }
+
+const sortedFilteredUsers = computed(() => {
+  return [...adminStore.filteredUsers].sort((a, b) => {
+    const aTime = a.last_seen ? new Date(a.last_seen).getTime() : 0
+    const bTime = b.last_seen ? new Date(b.last_seen).getTime() : 0
+    return bTime - aTime
+  })
+})
 </script>
 
 <template>
@@ -291,7 +299,7 @@ function daysLeft(iso: string | null) {
       <!-- ── Stats ── -->
       <div class="stats-grid" style="margin-bottom: var(--space-6)">
         <div class="stat-card">
-          <div class="stat-label">Operadores</div>
+          <div class="stat-label">Usuários</div>
           <div class="stat-value">{{ adminStore.stats.total }}</div>
         </div>
         <div class="stat-card success">
@@ -465,13 +473,13 @@ function daysLeft(iso: string | null) {
       <div class="card">
         <div class="card-header">
           <div class="flex items-center justify-between" style="gap: var(--space-4)">
-            <h2 class="section-card-title">Operadores Registrados</h2>
+            <h2 class="section-card-title">Usuários Registrados</h2>
             <div class="flex gap-3">
               <input
                 v-model="adminStore.searchQuery"
                 type="text"
                 class="form-input"
-                placeholder="Buscar operador ou e-mail..."
+                placeholder="Buscar usuário ou e-mail..."
                 style="width: 260px"
               />
               <button
@@ -489,13 +497,13 @@ function daysLeft(iso: string | null) {
         <div class="card-body" style="padding: 0">
           <div v-if="adminStore.loading.users" class="empty-state">
             <span class="spinner" />
-            <p>Carregando operadores...</p>
+            <p>Carregando Usuários...</p>
           </div>
 
           <table v-else>
             <thead>
               <tr>
-                <th>Operador</th>
+                <th>Usuário</th>
                 <th>E-mail</th>
                 <th>Status</th>
                 <th>Licença</th>
@@ -507,11 +515,11 @@ function daysLeft(iso: string | null) {
             <tbody>
               <tr v-if="adminStore.filteredUsers.length === 0">
                 <td colspan="7" class="empty-state" style="padding: 3rem">
-                  Nenhum operador encontrado.
+                  Nenhum usuário encontrado.
                 </td>
               </tr>
 
-              <template v-for="user in adminStore.filteredUsers" :key="user.id">
+              <template v-for="user in sortedFilteredUsers" :key="user.id">
                 <tr class="user-row">
                   <td>
                     <span class="mono" style="font-weight: 600; color: var(--text-primary)">
@@ -616,7 +624,7 @@ function daysLeft(iso: string | null) {
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">Editar Operador</h3>
+          <h3 class="modal-title">Editar Usuário</h3>
         </div>
         <div class="modal-body space-y-4">
           <div
@@ -673,7 +681,7 @@ function daysLeft(iso: string | null) {
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title" style="color: var(--accent-danger)">⚠ Desativar Operador</h3>
+          <h3 class="modal-title" style="color: var(--accent-danger)">⚠ Desativar Usuário</h3>
         </div>
         <div class="modal-body">
           <p style="color: var(--text-secondary)">
@@ -684,7 +692,7 @@ function daysLeft(iso: string | null) {
             >?
           </p>
           <p class="form-hint" style="margin-top: var(--space-2)">
-            O operador perderá acesso ao sistema. Esta ação pode ser revertida via edição da conta.
+            O usuário perderá acesso ao sistema. Esta ação pode ser revertida via edição da conta.
           </p>
         </div>
         <div class="modal-footer">
