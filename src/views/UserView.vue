@@ -2,12 +2,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { PanelLeft, ArrowLeftRight, Download, Users, ShieldCheck, Shield } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const toastStore = useToastStore()
@@ -63,7 +64,7 @@ function refreshOnline() {
 }
 
 function syncExpiredLicenseModal() {
-  if (!userStore.profile) {
+  if (!userStore.profile || route.name === 'license') {
     showExpiredLicenseModal.value = false
     return
   }
@@ -89,7 +90,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => userStore.profile?.software_access_until,
+  () => [userStore.profile?.software_access_until, route.name],
   () => {
     syncExpiredLicenseModal()
   },
