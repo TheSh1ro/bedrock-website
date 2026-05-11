@@ -175,8 +175,8 @@ async function handleSubmit() {
   isolation: isolate;
   padding: var(--space-8);
   background:
-    linear-gradient(180deg, rgba(12, 13, 13, 0.84), rgba(8, 9, 10, 0.92)),
-    linear-gradient(130deg, rgba(255, 255, 255, 0.035), rgba(184, 148, 95, 0.035) 46%, transparent);
+    linear-gradient(180deg, rgba(11, 18, 32, 0.84), rgba(8, 13, 24, 0.92)),
+    linear-gradient(130deg, rgba(79, 141, 247, 0.07), rgba(227, 106, 165, 0.04) 58%, transparent);
 }
 
 .login-page::before,
@@ -345,8 +345,8 @@ async function handleSubmit() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
-  color: #0f1114;
+  background: color-mix(in srgb, var(--accent-primary) 88%, #ffffff);
+  color: var(--text-on-accent);
   border: 1px solid color-mix(in srgb, var(--accent-primary) 68%, black);
   border-radius: var(--radius-md);
   cursor: pointer;

@@ -289,8 +289,8 @@ function formatDate(date: string | null) {
 .page-wrapper::before,
 .loading-page::before {
   background:
-    linear-gradient(180deg, rgba(12, 13, 13, 0.84), rgba(8, 9, 10, 0.92)),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.028), rgba(184, 148, 95, 0.035) 46%, transparent);
+    linear-gradient(180deg, rgba(11, 18, 32, 0.84), rgba(8, 13, 24, 0.92)),
+    linear-gradient(120deg, rgba(79, 141, 247, 0.055), rgba(227, 106, 165, 0.035) 58%, transparent);
 }
 
 .page-wrapper::after,

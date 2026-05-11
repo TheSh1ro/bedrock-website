@@ -789,8 +789,8 @@ function daysLeft(iso: string | null) {
 .admin-login-page::before,
 .admin-dashboard-page::before {
   background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.032), transparent 38%),
-    linear-gradient(180deg, rgba(12, 13, 13, 0.28), rgba(8, 9, 10, 0.62));
+    linear-gradient(120deg, rgba(79, 141, 247, 0.07), transparent 38%),
+    linear-gradient(180deg, rgba(11, 18, 32, 0.28), rgba(8, 13, 24, 0.62));
 }
 
 .admin-login-page::after,
@@ -826,13 +826,13 @@ function daysLeft(iso: string | null) {
 .admin-logo {
   width: 48px;
   height: 48px;
-  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
+  background: color-mix(in srgb, var(--accent-primary) 88%, #ffffff);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--text-2xl);
-  color: #0f1114;
+  color: var(--text-on-accent);
   flex-shrink: 0;
 }
 
@@ -952,8 +952,8 @@ function daysLeft(iso: string | null) {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #0f1114;
-  background: color-mix(in srgb, var(--accent-primary) 78%, #20251f);
+  color: var(--text-on-accent);
+  background: color-mix(in srgb, var(--accent-primary) 88%, #ffffff);
   padding: 0.15rem 0.5rem;
   border-radius: 1px;
 }

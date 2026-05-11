@@ -618,8 +618,8 @@ onMounted(() => {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
-  color: #0f1114;
+  background: color-mix(in srgb, var(--accent-primary) 88%, #ffffff);
+  color: var(--text-on-accent);
   font-size: var(--text-xs);
   font-weight: 700;
   display: flex;
