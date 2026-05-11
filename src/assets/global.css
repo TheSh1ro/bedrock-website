@@ -4,33 +4,33 @@
   color-scheme: dark;
 
   /* Semantic tokens */
-  --bg-canvas: #111827;
-  --bg-shell: #1f2937;
-  --surface-glass: rgba(31, 41, 55, 0.78);
-  --surface-glass-strong: rgba(17, 24, 39, 0.92);
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
-  --text-disabled: #6b7280;
+  --bg-canvas: #0f1114;
+  --bg-shell: #171a1f;
+  --surface-glass: rgba(27, 31, 36, 0.78);
+  --surface-glass-strong: rgba(19, 22, 26, 0.94);
+  --text-primary: #f3f4f1;
+  --text-secondary: #c8cbc5;
+  --text-muted: #8f968e;
+  --text-disabled: #636a64;
   --text-on-accent: #ffffff;
-  --accent-primary: #3b82f6;
-  --accent-secondary: #38bdf8;
-  --accent-success: #22c55e;
-  --accent-success-action: #22c55e;
-  --accent-danger: #ef4444;
-  --accent-danger-action: #ef4444;
-  --accent-warning: #f59e0b;
-  --border-glass: rgba(255, 255, 255, 0.2);
+  --accent-primary: #9ea88f;
+  --accent-secondary: #b8945f;
+  --accent-success: #6aa678;
+  --accent-success-action: #7eb88a;
+  --accent-danger: #c36b64;
+  --accent-danger-action: #d37b73;
+  --accent-warning: #c7a86a;
+  --border-glass: rgba(218, 222, 214, 0.14);
   --shadow-glow: none;
   --blur-md: 16px;
 
   /* Legacy aliases for migration */
   --amber: var(--accent-primary);
-  --amber-light: #60a5fa;
+  --amber-light: #c4cbb8;
   --amber-dim: color-mix(in srgb, var(--accent-primary) 16%, transparent);
   --amber-glow: none;
   --green: var(--accent-success);
-  --green-light: #86efac;
+  --green-light: #9fcaa7;
   --green-dim: color-mix(in srgb, var(--accent-success) 18%, transparent);
   --green-glow: none;
   --red: var(--accent-danger);
@@ -39,7 +39,7 @@
   --orange-dim: color-mix(in srgb, var(--accent-warning) 16%, transparent);
 
   /* Compatibility aliases */
-  --accent-primary-hover: #60a5fa;
+  --accent-primary-hover: #bcc4ae;
   --accent-primary-subtle: var(--amber-dim);
   --accent-secondary-subtle: color-mix(in srgb, var(--accent-secondary) 20%, transparent);
   --accent-success-subtle: var(--green-dim);
@@ -53,16 +53,16 @@
   --bg-surface: var(--surface-glass-strong);
   --bg-elevated: color-mix(in srgb, var(--surface-glass-strong) 78%, #151515);
   --bg-overlay: color-mix(in srgb, var(--bg-shell) 68%, black);
-  --wire: rgba(255, 255, 255, 0.14);
-  --wire-active: rgba(255, 255, 255, 0.24);
-  --wire-gold: rgba(59, 130, 246, 0.42);
+  --wire: rgba(218, 222, 214, 0.11);
+  --wire-active: rgba(218, 222, 214, 0.2);
+  --wire-gold: rgba(184, 148, 95, 0.42);
   --border-subtle: var(--wire);
   --border-default: var(--wire-active);
   --border-hover: var(--wire-gold);
 
-  --shadow-sm: 0 8px 24px rgba(3, 5, 11, 0.26);
-  --shadow-md: 0 20px 46px rgba(3, 5, 11, 0.38);
-  --shadow-lg: 0 30px 68px rgba(2, 3, 8, 0.56);
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.48);
 
   /* --font-display: 'Sora', 'Segoe UI', sans-serif;
   --font-ui: 'Sora', 'Segoe UI', sans-serif;
@@ -77,6 +77,7 @@
   --font-sans: var(--font-display);
 
   --text-xs: 0.875rem;
+  --text-2xs: 0.72rem;
   --text-sm: 0.95rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
@@ -147,20 +148,17 @@ body::after {
 
 body::before {
   background:
-    radial-gradient(720px circle at 14% 10%, rgba(255, 255, 255, 0.07), transparent 60%),
-    radial-gradient(
-      640px circle at 84% 12%,
-      color-mix(in srgb, var(--accent-primary) 14%, transparent),
-      transparent 62%
-    ),
-    linear-gradient(160deg, #0f172a 0%, #111827 52%, #1f2937 100%);
-  opacity: 0.95;
+    linear-gradient(120deg, rgba(255, 255, 255, 0.035), transparent 32%),
+    linear-gradient(160deg, #0e1012 0%, #12161a 54%, #191d21 100%);
+  opacity: 1;
 }
 
 body::after {
   background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.03), transparent 42%),
-    radial-gradient(600px circle at 50% 0, rgba(255, 255, 255, 0.03), transparent 70%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.62), transparent 78%);
 }
 
 ::-webkit-scrollbar {
@@ -295,7 +293,7 @@ label,
 
 .card-header {
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid rgba(175, 202, 255, 0.14);
+  border-bottom: 1px solid var(--wire);
 }
 
 .card-header-inner {
@@ -309,7 +307,7 @@ label,
 
 .card-footer {
   padding: var(--space-5) var(--space-6);
-  border-top: 1px solid rgba(175, 202, 255, 0.14);
+  border-top: 1px solid var(--wire);
 }
 
 .card-title {
@@ -354,13 +352,9 @@ label,
 }
 
 .btn-primary {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent-primary) 92%, white),
-    var(--accent-primary)
-  );
-  color: var(--text-on-accent);
-  border-color: color-mix(in srgb, var(--accent-primary) 74%, black);
+  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
+  color: #0f1114;
+  border-color: color-mix(in srgb, var(--accent-primary) 70%, black);
   box-shadow: none;
 }
 
@@ -375,8 +369,8 @@ label,
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent-secondary) 15%, var(--surface-glass));
-  border-color: color-mix(in srgb, var(--accent-secondary) 58%, var(--wire-active));
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--surface-glass));
+  border-color: color-mix(in srgb, var(--accent-primary) 42%, var(--wire-active));
 }
 
 .btn-success {
@@ -402,13 +396,13 @@ label,
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
-  border-color: rgba(175, 202, 255, 0.14);
+  border-color: var(--wire);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent-secondary) 11%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 9%, transparent);
   color: var(--text-primary);
-  border-color: rgba(175, 202, 255, 0.26);
+  border-color: var(--wire-active);
 }
 
 .btn-sm {
@@ -436,7 +430,7 @@ label,
   font-family: var(--font-body);
   font-size: var(--text-base);
   background: color-mix(in srgb, var(--surface-glass) 84%, #131313);
-  border: 1px solid rgba(175, 202, 255, 0.24);
+  border: 1px solid var(--wire-active);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   padding: 0.65rem var(--space-4);
@@ -454,7 +448,7 @@ label,
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--accent-secondary) 60%, var(--wire-active));
+  border-color: color-mix(in srgb, var(--accent-primary) 52%, var(--wire-active));
   box-shadow: none;
 }
 
@@ -478,7 +472,7 @@ th {
   color: var(--text-muted);
   text-align: left;
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgba(175, 202, 255, 0.14);
+  border-bottom: 1px solid var(--wire);
   background: color-mix(in srgb, var(--surface-glass) 78%, #151515);
 }
 
@@ -487,7 +481,7 @@ td {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgba(175, 202, 255, 0.12);
+  border-bottom: 1px solid var(--wire);
   vertical-align: middle;
 }
 
@@ -496,7 +490,7 @@ tr:last-child td {
 }
 
 tr:hover td {
-  background: color-mix(in srgb, var(--accent-secondary) 9%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
 }
 
 .badge {
@@ -538,9 +532,9 @@ tr:hover td {
 }
 
 .badge-info {
-  background: color-mix(in srgb, var(--accent-secondary) 20%, transparent);
-  color: #ffffff;
-  border: 1px solid color-mix(in srgb, var(--accent-secondary) 34%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+  color: var(--text-secondary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, transparent);
 }
 
 .alert {
@@ -555,9 +549,9 @@ tr:hover td {
 }
 
 .alert-info {
-  background: color-mix(in srgb, var(--accent-secondary) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-secondary) 34%, transparent);
-  color: color-mix(in srgb, var(--text-primary) 86%, var(--accent-secondary));
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, transparent);
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent-primary));
 }
 
 .alert-success {
@@ -602,7 +596,7 @@ tr:hover td {
 
 .modal-header {
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid rgba(175, 202, 255, 0.15);
+  border-bottom: 1px solid var(--wire);
 }
 
 .modal-title {
@@ -621,7 +615,7 @@ tr:hover td {
 
 .modal-footer {
   padding: var(--space-5) var(--space-6);
-  border-top: 1px solid rgba(175, 202, 255, 0.15);
+  border-top: 1px solid var(--wire);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -693,14 +687,14 @@ tr:hover td {
 }
 
 .toast-info {
-  border-color: color-mix(in srgb, var(--accent-secondary) 46%, transparent);
-  color: #ffffff;
+  border-color: color-mix(in srgb, var(--accent-primary) 36%, transparent);
+  color: var(--text-primary);
 }
 
 .tabs {
   display: flex;
   gap: var(--space-2);
-  border-bottom: 1px solid rgba(175, 202, 255, 0.14);
+  border-bottom: 1px solid var(--wire);
   margin-bottom: var(--space-6);
   padding-bottom: var(--space-2);
 }
@@ -722,13 +716,13 @@ tr:hover td {
 
 .tab:hover {
   color: var(--text-secondary);
-  border-color: rgba(175, 202, 255, 0.22);
+  border-color: var(--wire-active);
 }
 
 .tab.active {
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--accent-secondary) 55%, transparent);
-  background: color-mix(in srgb, var(--accent-secondary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 38%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
 }
 
 .plan-grid {
@@ -739,7 +733,7 @@ tr:hover td {
 
 .plan-card {
   background: color-mix(in srgb, var(--surface-glass) 84%, #171717);
-  border: 1px solid rgba(175, 202, 255, 0.2);
+  border: 1px solid var(--wire-active);
   border-radius: var(--radius-md);
   padding: var(--space-6);
   position: relative;
@@ -747,11 +741,11 @@ tr:hover td {
 }
 
 .plan-card.featured {
-  border-color: color-mix(in srgb, var(--accent-primary) 46%, transparent);
+  border-color: color-mix(in srgb, var(--accent-secondary) 48%, transparent);
   background: linear-gradient(
     155deg,
     color-mix(in srgb, var(--surface-glass) 80%, #171717),
-    color-mix(in srgb, var(--accent-primary) 14%, transparent)
+    color-mix(in srgb, var(--accent-secondary) 10%, transparent)
   );
 }
 
@@ -760,8 +754,8 @@ tr:hover td {
   position: absolute;
   top: 0;
   right: var(--space-4);
-  background: var(--accent-primary);
-  color: var(--text-on-accent);
+  background: color-mix(in srgb, var(--accent-secondary) 72%, #211a12);
+  color: #14100b;
   font-family: var(--font-ui);
   font-size: var(--text-2xs);
   font-weight: 700;
@@ -801,7 +795,7 @@ tr:hover td {
   font-family: var(--font-display);
   font-size: var(--text-4xl);
   font-weight: 700;
-  color: var(--accent-primary);
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -833,7 +827,7 @@ tr:hover td {
 
 .app-header {
   background: color-mix(in srgb, var(--surface-glass-strong) 92%, #0f0f0f);
-  border: 1px solid rgba(175, 202, 255, 0.2);
+  border: 1px solid var(--wire);
   border-radius: 0;
   margin: 0;
   position: sticky;
@@ -884,7 +878,7 @@ tr:hover td {
   align-items: center;
   gap: var(--space-2);
   background: color-mix(in srgb, var(--surface-glass) 88%, #171717);
-  border: 1px solid rgba(175, 202, 255, 0.18);
+  border: 1px solid var(--wire);
   border-radius: var(--radius-md);
   padding: 0.38rem 0.85rem;
 }
@@ -911,11 +905,11 @@ tr:hover td {
   transition: background var(--transition-fast);
 }
 .user-row:hover {
-  background: color-mix(in srgb, var(--accent-secondary) 9%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
 }
 .user-details {
   background: color-mix(in srgb, var(--surface-glass) 84%, #171717);
-  border-top: 1px solid rgba(175, 202, 255, 0.16);
+  border-top: 1px solid var(--wire);
 }
 .user-details-content {
   padding: var(--space-6);
@@ -1097,6 +1091,6 @@ tr:hover td {
   }
 }
 .plan-card:hover {
-  border-color: color-mix(in srgb, var(--accent-primary) 46%, transparent);
+  border-color: color-mix(in srgb, var(--accent-secondary) 42%, transparent);
   transform: translateY(-2px);
 }

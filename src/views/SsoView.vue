@@ -62,8 +62,8 @@ onMounted(async () => {
   place-items: center;
   padding: var(--space-8);
   background:
-    linear-gradient(180deg, rgba(12, 12, 12, 0.82), rgba(7, 7, 7, 0.92)),
-    linear-gradient(130deg, rgba(255, 255, 255, 0.04), rgba(244, 218, 45, 0.05) 46%, transparent);
+    linear-gradient(180deg, rgba(12, 13, 13, 0.84), rgba(8, 9, 10, 0.92)),
+    linear-gradient(130deg, rgba(255, 255, 255, 0.035), rgba(184, 148, 95, 0.035) 46%, transparent);
 }
 
 .sso-panel {

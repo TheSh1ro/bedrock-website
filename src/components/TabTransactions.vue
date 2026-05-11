@@ -1,6 +1,6 @@
 <!-- components/TabTransactions.vue -->
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -11,40 +11,18 @@ onMounted(() => {
   }
 })
 
-function isIncoming(amount: number) {
-  return amount > 0
+function normalizeAmount(amount: number | string) {
+  return Number(amount)
 }
 
-const VISIBLE_TYPES = new Set([
-  'days_purchase',
-  'license_extension',
-  'admin_license_add',
-  'admin_license_edit',
-  'admin_duration_edit',
-  'admin_plan_update',
-  'admin_user_update',
-])
+function isIncoming(amount: number | string) {
+  return normalizeAmount(amount) > 0
+}
 
-const transactionsView = computed(() =>
-  userStore.transactions
-    .filter((tx) => VISIBLE_TYPES.has(tx.type) || tx.type.startsWith('admin_'))
-    .map((tx) => ({
-      ...tx,
-      label: mapLabel(tx.type, tx.reference_id, tx.label),
-      category: tx.type.startsWith('admin_') ? 'Ação administrativa' : 'Compra',
-    })),
-)
-
-function mapLabel(type: string, referenceId: string, fallback: string) {
-  if (type === 'days_purchase') return `Compra de licença (${referenceId} dias)`
-  if (type === 'license_extension') return `Extensão de licença (${referenceId} dias)`
-  if (type === 'admin_license_add') return 'Licença adicionada pelo administrador'
-  if (type === 'admin_license_edit') return 'Licença editada pelo administrador'
-  if (type === 'admin_duration_edit') return 'Duração da licença ajustada pelo administrador'
-  if (type === 'admin_plan_update') return 'Plano de licença atualizado pelo administrador'
-  if (type === 'admin_user_update') return 'Dados do usuário editados pelo administrador'
-  if (type.startsWith('admin_')) return 'Ajuste administrativo'
-  return fallback || type
+function formatAmount(amount: number | string) {
+  const value = normalizeAmount(amount)
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${value} dias`
 }
 
 function formatDateTime(date: string | null) {
@@ -66,7 +44,7 @@ function formatDateTime(date: string | null) {
         <div class="card-header-inner">
           <div>
             <h2 class="card-title">Histórico de Transações</h2>
-            <p class="card-subtitle">Compras e ações administrativas de licença</p>
+            <p class="card-subtitle">Ajustes manuais de licença feitos pela administração</p>
           </div>
           <button
             class="btn btn-ghost"
@@ -87,11 +65,11 @@ function formatDateTime(date: string | null) {
       </div>
 
       <!-- Empty -->
-      <div v-else-if="transactionsView.length === 0" class="empty-state">
+      <div v-else-if="userStore.transactions.length === 0" class="empty-state">
         <div class="empty-state-icon">◈</div>
         <p>Nenhum histórico disponível</p>
         <p style="font-size: var(--text-sm); margin-top: var(--space-1)">
-          As compras e ações administrativas aparecerão aqui
+          Os ajustes administrativos de licença aparecerão aqui
         </p>
       </div>
 
@@ -102,13 +80,12 @@ function formatDateTime(date: string | null) {
             <tr>
               <th style="width: 44px"></th>
               <th>Descrição</th>
-              <th>Categoria</th>
               <th>Data</th>
-              <th style="text-align: right">Valor</th>
+              <th style="text-align: right">Ajuste</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="tx in transactionsView" :key="tx.id">
+            <tr v-for="tx in userStore.transactions" :key="tx.id">
               <td>
                 <div
                   class="tx-icon"
@@ -120,9 +97,6 @@ function formatDateTime(date: string | null) {
               <td>
                 <div class="tx-label">{{ tx.label }}</div>
               </td>
-              <td>
-                <span class="tx-badge">{{ tx.category }}</span>
-              </td>
               <td class="mono" style="font-size: var(--text-xs); color: var(--text-muted)">
                 {{ formatDateTime(tx.created_at) }}
               </td>
@@ -131,7 +105,7 @@ function formatDateTime(date: string | null) {
                   class="tx-amount"
                   :class="isIncoming(tx.amount) ? 'tx-amount--incoming' : 'tx-amount--outgoing'"
                 >
-                  {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
+                  {{ formatAmount(tx.amount) }}
                 </span>
               </td>
             </tr>
@@ -148,7 +122,7 @@ function formatDateTime(date: string | null) {
           style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↑</span
         >
-        <span>Entrada</span>
+        <span>Licença estendida</span>
       </div>
       <div class="tx-legend-item">
         <span
@@ -156,7 +130,7 @@ function formatDateTime(date: string | null) {
           style="width: 22px; height: 22px; font-size: var(--text-xs)"
           >↓</span
         >
-        <span>Saída</span>
+        <span>Licença reduzida</span>
       </div>
     </div>
   </div>
@@ -207,22 +181,6 @@ function formatDateTime(date: string | null) {
 }
 .tx-amount--outgoing {
   color: var(--accent-danger-action);
-}
-
-.tx-balance {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.tx-badge {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--wire);
-  border-radius: var(--radius-sm);
-  padding: 0.18rem 0.45rem;
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
 }
 
 .tx-legend {

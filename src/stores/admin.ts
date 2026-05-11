@@ -29,6 +29,7 @@ export interface ActivationKey {
   created_at: string
   used: boolean
   used_at: string | null
+  used_by: string | null
 }
 
 type UserPatch = Partial<Omit<User, 'id' | 'created_at'>> & {
@@ -191,14 +192,18 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function generateActivationKey(): Promise<
+  async function generateActivationKey(
+    durationDays = 3,
+  ): Promise<
     { ok: true; key: string; durationDays: number } | { ok: false; error: string }
   > {
     loading.value.generateActivationKey = true
     try {
       const result = await adminRpc<{ status: string; key: string; duration_days: number }>(
         'admin_generate_activation_key',
-        {},
+        {
+          p_duration_days: durationDays,
+        },
       )
       if (!result.ok) return result
       await loadActivationKeys()

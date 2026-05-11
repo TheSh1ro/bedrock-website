@@ -13,14 +13,12 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const toastStore = useToastStore()
 
-// ── Online users counter (fake / demo) ──
 const TOTAL_REGISTERED = 33
-const onlineCount = ref(0)
 const profileMenuOpen = ref(false)
 const profileImageError = ref(false)
 const profileMenuRef = ref<HTMLElement | null>(null)
 const showExpiredLicenseModal = ref(false)
-let onlineInterval: ReturnType<typeof setInterval> | null = null
+const EXPIRED_LICENSE_MODAL_TTL_MS = 60 * 60 * 1000
 
 const profileAvatarUrl = computed(() => {
   const seed = encodeURIComponent(userStore.profile?.username || 'soldier')
@@ -49,18 +47,19 @@ function handleGlobalPointerDown(event: Event) {
   }
 }
 
-function seededValue(seed: number, min: number, max: number): number {
-  const h = ((seed * 2654435761) >>> 0) ^ (seed >>> 16)
-  return min + (h % (max - min + 1))
+function expiredLicenseModalStorageKey() {
+  const userId = userStore.profile?.id ?? 'anonymous'
+  return `celerity:expired-license-modal-seen:${userId}`
 }
 
-function refreshOnline() {
-  const now = new Date()
-  const utc = now.getTime() + now.getTimezoneOffset() * 60_000
-  const br = new Date(utc - 3 * 60 * 60 * 1000)
-  const hour = br.getHours()
-  const seed = br.getFullYear() * 1000000 + (br.getMonth() + 1) * 10000 + br.getDate() * 100 + hour
-  onlineCount.value = hour >= 12 && hour < 22 ? seededValue(seed, 1, 4) : 0
+function hasRecentExpiredLicenseModalNotice() {
+  const expiresAt = Number(localStorage.getItem(expiredLicenseModalStorageKey()) ?? 0)
+  return Number.isFinite(expiresAt) && expiresAt > Date.now()
+}
+
+function markExpiredLicenseModalNoticeSeen() {
+  const expiresAt = Date.now() + EXPIRED_LICENSE_MODAL_TTL_MS
+  localStorage.setItem(expiredLicenseModalStorageKey(), String(expiresAt))
 }
 
 function syncExpiredLicenseModal() {
@@ -68,7 +67,13 @@ function syncExpiredLicenseModal() {
     showExpiredLicenseModal.value = false
     return
   }
-  showExpiredLicenseModal.value = userStore.isExpired
+
+  const shouldShow = userStore.isExpired && !hasRecentExpiredLicenseModalNotice()
+  showExpiredLicenseModal.value = shouldShow
+
+  if (shouldShow) {
+    markExpiredLicenseModalNoticeSeen()
+  }
 }
 
 function closeExpiredLicenseModal() {
@@ -82,8 +87,6 @@ function goToLicenseFromExpiredModal() {
 
 onMounted(async () => {
   document.addEventListener('pointerdown', handleGlobalPointerDown)
-  refreshOnline()
-  onlineInterval = setInterval(refreshOnline, 30_000)
   await authStore.loadProfile()
   syncExpiredLicenseModal()
   await userStore.loadLicensePlans()
@@ -98,7 +101,6 @@ watch(
 
 onUnmounted(() => {
   document.removeEventListener('pointerdown', handleGlobalPointerDown)
-  if (onlineInterval) clearInterval(onlineInterval)
 })
 
 function formatDate(date: string | null) {
@@ -118,7 +120,12 @@ function formatDate(date: string | null) {
         <nav class="header-nav">
           <div class="header-pill">
             <span class="pill-label">Licença</span>
-            <span class="pill-value" style="color: var(--accent-primary)">
+            <span
+              class="pill-value"
+              :style="{
+                color: userStore.isExpired ? 'var(--accent-danger)' : 'var(--accent-success)',
+              }"
+            >
               {{ userStore.isExpired ? 'EXPIRADA' : `${userStore.daysLeft}d` }}
             </span>
           </div>
@@ -202,15 +209,7 @@ function formatDate(date: string | null) {
           <div class="side-online-card">
             <div class="soc-header">
               <span class="soc-label"><Users class="soc-icon" />USUÁRIOS</span>
-              <span class="soc-pulse" :class="onlineCount > 0 ? 'live' : 'idle'"></span>
             </div>
-            <div class="soc-row">
-              <span class="soc-metric-label">Usando agora</span>
-              <span class="soc-metric-value" :class="onlineCount > 0 ? 'online' : 'zero'">{{
-                onlineCount
-              }}</span>
-            </div>
-            <div class="soc-divider"></div>
             <div class="soc-row">
               <span class="soc-metric-label">Registrados</span>
               <span class="soc-metric-value total">{{ TOTAL_REGISTERED }}</span>
@@ -290,8 +289,8 @@ function formatDate(date: string | null) {
 .page-wrapper::before,
 .loading-page::before {
   background:
-    linear-gradient(180deg, rgba(12, 12, 12, 0.82), rgba(7, 7, 7, 0.9)),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.035), rgba(244, 218, 45, 0.05) 46%, transparent);
+    linear-gradient(180deg, rgba(12, 13, 13, 0.84), rgba(8, 9, 10, 0.92)),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.028), rgba(184, 148, 95, 0.035) 46%, transparent);
 }
 
 .page-wrapper::after,
@@ -386,12 +385,12 @@ function formatDate(date: string | null) {
 
 .side-nav-item:hover {
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
 }
 .side-nav-item.active {
-  color: var(--accent-primary);
-  border-left-color: var(--accent-primary);
-  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+  color: var(--text-primary);
+  border-left-color: var(--accent-secondary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
 }
 .side-nav-icon {
   opacity: 0.5;
@@ -480,32 +479,6 @@ function formatDate(date: string | null) {
   color: var(--text-muted);
 }
 
-.soc-pulse {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.soc-pulse.idle {
-  background: var(--text-disabled);
-}
-.soc-pulse.live {
-  background: var(--accent-success);
-  animation: pulse-live 2s infinite;
-}
-
-@keyframes pulse-live {
-  0% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0.55;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 .soc-row {
   display: flex;
   align-items: center;
@@ -525,12 +498,6 @@ function formatDate(date: string | null) {
   font-size: var(--text-xl);
   font-weight: 700;
   line-height: 1;
-}
-.soc-metric-value.online {
-  color: var(--accent-success);
-}
-.soc-metric-value.zero {
-  color: var(--text-disabled);
 }
 .soc-metric-value.total {
   color: var(--text-primary);
@@ -574,7 +541,7 @@ function formatDate(date: string | null) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-primary);
+  color: var(--accent-secondary);
 }
 
 .profile-dropdown {
@@ -607,18 +574,12 @@ function formatDate(date: string | null) {
 }
 
 .profile-action:hover {
-  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 9%, transparent);
   border-color: var(--wire);
 }
 
 .profile-action.danger {
   color: var(--accent-danger-action);
-}
-
-.soc-divider {
-  height: 1px;
-  background: var(--wire);
-  margin: var(--space-2) 0;
 }
 
 .loading-content {

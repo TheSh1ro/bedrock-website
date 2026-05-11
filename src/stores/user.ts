@@ -13,9 +13,7 @@ export interface LicensePlan {
 
 export interface Transaction {
   id: string
-  type: string
-  amount: number
-  reference_id: string
+  amount: number | string
   label: string
   created_at: string
 }

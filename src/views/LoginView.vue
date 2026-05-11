@@ -175,8 +175,8 @@ async function handleSubmit() {
   isolation: isolate;
   padding: var(--space-8);
   background:
-    linear-gradient(180deg, rgba(12, 12, 12, 0.82), rgba(7, 7, 7, 0.92)),
-    linear-gradient(130deg, rgba(255, 255, 255, 0.04), rgba(244, 218, 45, 0.05) 46%, transparent);
+    linear-gradient(180deg, rgba(12, 13, 13, 0.84), rgba(8, 9, 10, 0.92)),
+    linear-gradient(130deg, rgba(255, 255, 255, 0.035), rgba(184, 148, 95, 0.035) 46%, transparent);
 }
 
 .login-page::before,
@@ -271,13 +271,13 @@ async function handleSubmit() {
 
 .auth-tab:hover:not(.active) {
   color: var(--text-primary);
-  border-color: rgba(175, 202, 255, 0.2);
+  border-color: var(--wire-active);
 }
 
 .auth-tab.active {
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--accent-secondary) 52%, transparent);
-  background: color-mix(in srgb, var(--accent-secondary) 13%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 38%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
 }
 
 .auth-form {
@@ -345,12 +345,8 @@ async function handleSubmit() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent-primary) 95%, white),
-    var(--accent-primary)
-  );
-  color: var(--text-on-accent);
+  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
+  color: #0f1114;
   border: 1px solid color-mix(in srgb, var(--accent-primary) 68%, black);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -412,7 +408,7 @@ async function handleSubmit() {
 }
 
 .auth-footer a:hover {
-  color: #f4da2d;
+  color: color-mix(in srgb, var(--accent-secondary) 86%, white);
   text-decoration: underline;
 }
 

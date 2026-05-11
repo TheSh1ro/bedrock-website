@@ -14,6 +14,7 @@ const showLogoutModal = ref(false)
 const showGeneratedKeyModal = ref(false)
 const generatedActivationKey = ref('')
 const generatedActivationDays = ref(3)
+const activationKeyDuration = ref(3)
 
 const loginEmail = ref('')
 const loginPassword = ref('')
@@ -158,7 +159,7 @@ async function confirmLogout() {
 }
 
 async function generateActivationKey() {
-  const result = await adminStore.generateActivationKey()
+  const result = await adminStore.generateActivationKey(activationKeyDuration.value)
   if (!result.ok) {
     toastStore.error(result.error)
     return
@@ -414,7 +415,10 @@ function daysLeft(iso: string | null) {
                     :disabled="adminStore.loading.deleteActivationKey === key.id"
                     @click="deleteActivationKey(key.id)"
                   >
-                    <span class="spinner" v-if="adminStore.loading.deleteActivationKey === key.id" />
+                    <span
+                      class="spinner"
+                      v-if="adminStore.loading.deleteActivationKey === key.id"
+                    />
                     <span v-else>Excluir</span>
                   </button>
                 </td>
@@ -430,16 +434,29 @@ function daysLeft(iso: string | null) {
           <div class="flex items-center justify-between">
             <div>
               <h2 class="section-card-title">Keys de Ativação</h2>
-              <p class="section-card-sub">Gera key para criação de conta com 3 dias de licença</p>
+              <p class="section-card-sub">Gera key para criação de conta com duração definida</p>
             </div>
-            <button
-              class="btn btn-primary btn-sm"
-              :disabled="adminStore.loading.generateActivationKey"
-              @click="generateActivationKey"
-            >
-              <span class="spinner" v-if="adminStore.loading.generateActivationKey" />
-              <span v-else>Gerar Key (3 dias)</span>
-            </button>
+            <div class="activation-key-actions">
+              <select
+                v-model.number="activationKeyDuration"
+                class="form-input form-select activation-duration-select"
+                :disabled="adminStore.loading.generateActivationKey"
+                aria-label="Duração da key de ativação"
+              >
+                <option :value="3">3 dias</option>
+                <option :value="7">7 dias</option>
+                <option :value="15">15 dias</option>
+                <option :value="30">30 dias</option>
+              </select>
+              <button
+                class="btn btn-primary btn-sm"
+                :disabled="adminStore.loading.generateActivationKey"
+                @click="generateActivationKey"
+              >
+                <span class="spinner" v-if="adminStore.loading.generateActivationKey" />
+                <span v-else>Gerar Key</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -536,7 +553,6 @@ function daysLeft(iso: string | null) {
                     </div>
                   </td>
                 </tr>
-
               </template>
             </tbody>
           </table>
@@ -548,7 +564,9 @@ function daysLeft(iso: string | null) {
     <div v-if="showPlanModal" class="modal-overlay" @click.self="showPlanModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">{{ planModal.isNew ? 'Novo Plano de Licença' : 'Editar Plano de Licença' }}</h3>
+          <h3 class="modal-title">
+            {{ planModal.isNew ? 'Novo Plano de Licença' : 'Editar Plano de Licença' }}
+          </h3>
         </div>
         <div class="modal-body space-y-4">
           <div class="form-group">
@@ -694,7 +712,11 @@ function daysLeft(iso: string | null) {
           <div class="activation-key-box mono">
             {{ generatedActivationKey }}
           </div>
-          <button class="btn btn-ghost btn-sm" style="margin-top: var(--space-3)" @click="copyGeneratedKey">
+          <button
+            class="btn btn-ghost btn-sm"
+            style="margin-top: var(--space-3)"
+            @click="copyGeneratedKey"
+          >
             Copiar key
           </button>
         </div>
@@ -767,21 +789,17 @@ function daysLeft(iso: string | null) {
 .admin-login-page::before,
 .admin-dashboard-page::before {
   background:
-    radial-gradient(
-      56rem circle at 10% 14%,
-      color-mix(in srgb, var(--accent-secondary) 19%, transparent),
-      transparent 56%
-    ),
-    radial-gradient(
-      52rem circle at 88% 9%,
-      color-mix(in srgb, var(--accent-primary) 16%, transparent),
-      transparent 60%
-    );
+    linear-gradient(120deg, rgba(255, 255, 255, 0.032), transparent 38%),
+    linear-gradient(180deg, rgba(12, 13, 13, 0.28), rgba(8, 9, 10, 0.62));
 }
 
 .admin-login-page::after,
 .admin-dashboard-page::after {
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05), transparent 40%);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent 80%);
 }
 
 .admin-login-page {
@@ -808,13 +826,13 @@ function daysLeft(iso: string | null) {
 .admin-logo {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--text-2xl);
-  color: var(--text-on-accent);
+  color: #0f1114;
   flex-shrink: 0;
 }
 
@@ -839,14 +857,14 @@ function daysLeft(iso: string | null) {
 
 .admin-login-card {
   background: color-mix(in srgb, var(--surface-glass-strong) 92%, #141414);
-  border: 1px solid color-mix(in srgb, var(--accent-secondary) 30%, var(--border-glass));
+  border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
 }
 
 .admin-login-card-head {
   padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid rgba(175, 202, 255, 0.18);
+  border-bottom: 1px solid var(--wire);
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   text-transform: uppercase;
@@ -900,7 +918,7 @@ function daysLeft(iso: string | null) {
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(175, 202, 255, 0.34);
+  background: var(--wire-active);
 }
 
 .stat-card.success::before {
@@ -934,8 +952,8 @@ function daysLeft(iso: string | null) {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--text-on-accent);
-  background: var(--accent-primary);
+  color: #0f1114;
+  background: color-mix(in srgb, var(--accent-primary) 78%, #20251f);
   padding: 0.15rem 0.5rem;
   border-radius: 1px;
 }
@@ -992,8 +1010,23 @@ function daysLeft(iso: string | null) {
   border: 1px solid var(--wire-active);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
-  color: var(--accent-primary);
+  color: var(--accent-secondary);
   font-size: var(--text-sm);
   word-break: break-all;
+}
+
+.activation-key-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.activation-duration-select {
+  width: 120px;
+  min-height: 34px;
+  padding: 0.42rem var(--space-3);
+  font-size: var(--text-sm);
 }
 </style>

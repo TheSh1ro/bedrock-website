@@ -351,7 +351,7 @@ onMounted(() => {
 <style scoped>
 /* ─── Info card ─────────────────────────────────────────────────────────── */
 .card--highlight {
-  border: 1px solid var(--accent-primary);
+  border-color: color-mix(in srgb, var(--accent-secondary) 36%, var(--wire-active));
 }
 
 .card-text {
@@ -379,8 +379,8 @@ onMounted(() => {
 .feature-dot {
   width: 6px;
   height: 6px;
-  background: var(--accent-primary);
-  border-radius: 50%;
+  background: var(--accent-secondary);
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
@@ -458,8 +458,9 @@ onMounted(() => {
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--accent-primary);
+  background: color-mix(in srgb, var(--surface-glass) 82%, #151515);
   border: none;
+  border-left: 2px solid transparent;
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
@@ -480,7 +481,7 @@ onMounted(() => {
 .accordion-index {
   font-family: var(--font-mono);
   font-size: var(--text-base);
-  color: var(--text-on-accent);
+  color: var(--accent-secondary);
   letter-spacing: 0.08em;
   flex-shrink: 0;
 }
@@ -490,7 +491,7 @@ onMounted(() => {
   font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--text-on-accent);
+  color: var(--text-primary);
 }
 
 /* .accordion-item--open .accordion-title {
@@ -505,7 +506,12 @@ onMounted(() => {
 
 .accordion-item--open .accordion-chevron {
   transform: rotate(90deg);
-  color: var(--accent-primary);
+  color: var(--accent-secondary);
+}
+
+.accordion-item--open .accordion-trigger {
+  border-left-color: var(--accent-secondary);
+  background: color-mix(in srgb, var(--accent-primary) 9%, transparent);
 }
 
 .accordion-body {
@@ -583,7 +589,7 @@ onMounted(() => {
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--accent-primary);
+  color: var(--accent-secondary);
 }
 
 .tutorial-item-desc {
@@ -611,9 +617,9 @@ onMounted(() => {
   flex-shrink: 0;
   width: 1.6rem;
   height: 1.6rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--accent-primary) 80%, white);
-  color: var(--text-on-accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-primary) 76%, #20251f);
+  color: #0f1114;
   font-size: var(--text-xs);
   font-weight: 700;
   display: flex;
